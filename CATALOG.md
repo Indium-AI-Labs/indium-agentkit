@@ -14,6 +14,7 @@ python scripts/list_content.py --format markdown
 | skill | `author-agentkit-content` | Create or update indium-agentkit skills, subagents, templates, validation, and documentation. Use when adding, revising, validating, or publishing content in this distribution repository. |
 | skill | `backend-api` | Build robust typed API endpoints with safe contracts. |
 | skill | `ci-pipeline` | Design reliable CI pipelines with useful required checks. |
+| skill | `compliance-audit` | Audit code, configuration, and data flows against GDPR, SOC 2, HIPAA, and PCI-DSS compliance controls including PII redaction and audit logging. |
 | skill | `data-pipeline-design` | Design safe ETL/ELT pipelines, data warehouse schemas, partition strategies, idempotency controls, and data quality assertions before implementation. |
 | skill | `database-design` | Design safe PostgreSQL schemas and staged migrations. |
 | skill | `dependency-audit` | Audit project dependencies for vulnerabilities, staleness, license risk, unused packages, and version-policy compliance using manifests, lockfiles, and available scanning tools. |
@@ -36,6 +37,7 @@ python scripts/list_content.py --format markdown
 | skill | `security-review` | Review a scoped code change, endpoint, integration, configuration, or infrastructure definition for security risks by tracing assets, trust boundaries, authorization, input handling, and exploit paths. |
 | skill | `systematic-debugging` | Investigate a bug, failing test, regression, unexpected output, or production issue through reproduction, evidence, hypotheses, root-cause analysis, and a regression test before fixing it. |
 | skill | `test-first-change` | Plan and implement a behavior change, bug fix, or refactor with focused behavior-level tests, public seams, and incremental red-green-refactor cycles. Use when writing or changing production code. |
+| skill | `threat-modeling` | Perform structured threat modeling (STRIDE/PASTA) on architecture diagrams, system interfaces, and data flow graphs before implementation. |
 | skill | `verify-and-ship` | Verify a completed repository change, run declared tests and lint, inspect the diff for generated artifacts or secrets, and commit and publish only when repository policy or the user authorizes it. Use before finishing or shipping work. |
 | skill | `write-documentation` | Author, update, or audit project documentation — READMEs, architecture decisions, API references, onboarding guides, and inline doc — from code evidence without inventing behavior. |
 | skill | `write-runbook` | Create or update an operational runbook for a service, feature, or failure mode with detection, diagnosis, mitigation, recovery, and escalation procedures. |
@@ -43,6 +45,7 @@ python scripts/list_content.py --format markdown
 | subagent | `api-designer` | Read-only API design specialist that analyzes requirements, existing conventions, and data models to propose typed contract designs. |
 | subagent | `backend-builder` | Implement scoped typed API behavior with server-side safeguards. |
 | subagent | `ci-verifier` | Diagnose CI workflows and report exact verification evidence. |
+| subagent | `compliance-auditor` | Read-only compliance specialist that audits code, data flows, PII redaction, encryption, and audit logs against compliance control standards. |
 | subagent | `data-engineer` | Read-only data engineering specialist that inspects schemas, pipeline transformations, partitioning strategies, and query performance. |
 | subagent | `database-architect` | Analyze schemas and propose safe, verified migration plans. |
 | subagent | `dependency-auditor` | Read-only dependency specialist that scans manifests, lockfiles, and advisory databases for vulnerabilities, staleness, and license risks. |

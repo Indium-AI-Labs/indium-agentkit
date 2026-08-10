@@ -136,6 +136,7 @@ def validate_repository(root: Path) -> list[tuple[Path, str]]:
         "templates/handoffs/dependency-audit-report.md",
         "templates/handoffs/accessibility-audit-report.md",
         "templates/handoffs/llm-eval-report.md",
+        "templates/handoffs/threat-model.md",
         "docs/compatibility.md", "docs/security.md", "docs/releasing.md",
         "CATALOG.md", "CHANGELOG.md", "SECURITY.md",
     ]
