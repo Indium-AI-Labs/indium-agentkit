@@ -26,6 +26,7 @@ python scripts/list_content.py --format markdown
 | skill | `infrastructure-review` | Review infrastructure for security, reliability, and cost risks. |
 | skill | `llm-eval-harness` | Design and execute evaluation benchmarks for prompts, RAG retrieval pipelines, and agent tools to measure token cost, latency, accuracy, and guardrail compliance. |
 | skill | `load-testing-suite` | Design, configure, and execute load and stress testing suites (k6, Locust) with target latency SLAs, throughput targets, and tear-down verification. |
+| skill | `mobile-release-safety` | Plan and audit mobile application releases (iOS/Android/React Native/Flutter) covering app store submission requirements, code signing, feature flags, OTA updates, and crash reporting. |
 | skill | `observability-setup` | Instrument code with structured logging, metrics, distributed tracing, or alerting following existing observability patterns and avoiding credential exposure. |
 | skill | `onboard-to-codebase` | Generate a developer onboarding guide or codebase orientation by analyzing architecture, conventions, dependencies, workflows, and common tasks from the existing project. |
 | skill | `performance-optimization` | Measure, analyze, and optimize a specific performance bottleneck through profiling, targeted change, and comparative re-measurement with evidence. |
@@ -58,6 +59,7 @@ python scripts/list_content.py --format markdown
 | subagent | `incident-commander` | Coordinate evidence-based incident response without production edits. |
 | subagent | `llm-evaluator` | Read-only LLM evaluation specialist that inspects prompt definitions, RAG retrieval logic, benchmark datasets, and guardrails. |
 | subagent | `migration-planner` | Read-only migration planner that inventories compatibility impact, rollout stages, rollback paths, and verification for schema, API, configuration, or file-format changes. |
+| subagent | `mobile-specialist` | Read-only mobile specialist that inspects build configurations, permission manifests, native bridges, bundle sizes, and store submission readiness. |
 | subagent | `performance-profiler` | Read-only performance specialist that chooses approved profiling methods, compares evidence against a baseline, and reports bottlenecks. |
 | subagent | `release-engineer` | Prepare release plans and assess deployment readiness. |
 | subagent | `resilience-reviewer` | Read-only resilience specialist that analyzes circuit breakers, retry backoffs, timeout configurations, connection pools, and fallbacks. |
