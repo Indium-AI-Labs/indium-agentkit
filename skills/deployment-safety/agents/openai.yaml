@@ -1,0 +1,4 @@
+interface:
+  display_name: "Deployment Safety"
+  short_description: "Plan staged deployments with rollback"
+  default_prompt: "Use $deployment-safety to prepare this deployment."

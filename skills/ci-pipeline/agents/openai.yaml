@@ -1,0 +1,4 @@
+interface:
+  display_name: "CI Pipeline"
+  short_description: "Design reliable continuous integration checks"
+  default_prompt: "Use $ci-pipeline to improve this CI pipeline."

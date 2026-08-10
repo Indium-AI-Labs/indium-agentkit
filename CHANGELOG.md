@@ -6,6 +6,9 @@ All notable changes to this project are documented here.
 
 ### Added
 
+- Deployment-safety, CI-pipeline, incident-triage, and infrastructure-review
+  workflows.
+- Release-engineer, CI-verifier, and incident-commander specialist agents.
 - Frontend, backend API, and database-design implementation workflows.
 - Specialist frontend-builder, backend-builder, and database-architect agents.
 - Shared feature, API, migration, and verification handoff templates with

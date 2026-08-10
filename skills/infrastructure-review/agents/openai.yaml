@@ -1,0 +1,4 @@
+interface:
+  display_name: "Infrastructure Review"
+  short_description: "Review infrastructure security reliability and cost"
+  default_prompt: "Use $infrastructure-review to review this infrastructure."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Incident Triage"
+  short_description: "Triage incidents with evidence and mitigation"
+  default_prompt: "Use $incident-triage to coordinate this incident response."

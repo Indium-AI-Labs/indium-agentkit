@@ -154,7 +154,7 @@ and [release guidance](docs/releasing.md).
 
 ## Status
 
-The current bundle contains thirteen portable skills, seven read-only specialists,
+The current bundle contains seventeen portable skills, ten read-only specialists,
 and two scoped implementation subagents. The product-engineering pack includes
-frontend, backend API, and database-design workflows plus reusable handoff
-templates. See `CATALOG.md` for the generated inventory.
+frontend, backend API, database-design, CI, deployment-safety, incident, and
+infrastructure-review workflows. See `CATALOG.md` for the generated inventory.
