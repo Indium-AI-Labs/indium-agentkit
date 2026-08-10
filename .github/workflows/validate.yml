@@ -17,6 +17,8 @@ jobs:
         run: python3 scripts/validate_content.py
       - name: Validate handoff templates
         run: python3 scripts/validate_handoff.py --templates-dir templates/handoffs
+      - name: Check catalog freshness
+        run: python3 scripts/diff_catalog.py
       - name: Build Cursor rules
         run: python3 scripts/build_cursor_rules.py --skills-dir skills --out-dir .cursor/rules
       - name: List catalog content
