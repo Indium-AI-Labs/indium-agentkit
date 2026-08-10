@@ -1,26 +1,29 @@
 <!--
 Read natively by Codex, Cursor, Gemini CLI/Antigravity, Copilot, Aider,
-Windsurf, and Zed. install.sh/install.ps1 symlink CLAUDE.md to this file so
-Claude Code receives the same context without a duplicate source file.
+Windsurf, and Zed. This file contains instructions for developing
+indium-agentkit itself. Consumer projects receive templates/AGENTS.md instead.
 -->
 
 # What this project is
 
-[Describe the project's purpose, users, and high-level architecture.]
+indium-agentkit distributes portable AI coding-agent skills, Claude Code
+subagents, and project-context templates. Skills are authored as SKILL.md and
+converted to Cursor rules; subagents use Claude Code-compatible frontmatter.
 
 # Conventions
 
-- Language/framework: [fill in]
-- Test command: [fill in]
-- Lint command: [fill in]
-- Source code lives in: [fill in]
-- Tests live in: [fill in]
-- Other important paths: [fill in]
+- Language/framework: Markdown, Python 3 standard library, Bash, and PowerShell.
+- Test command: `python -m unittest discover -s tests -v`
+- Lint command: `python scripts/validate_content.py`
+- Source code lives in: `skills/`, `agents/`, `scripts/`, and `templates/`.
+- Tests live in: `tests/`.
+- Generated Cursor rules are intentionally ignored at `.cursor/rules/`.
 
 # Notes for agents
 
-- Read the relevant code and nearby documentation before making changes.
-- Keep changes scoped, preserve existing conventions, and avoid unrelated edits.
-- Run the relevant tests and lint checks; report anything you could not verify.
-- After completing repository work, including creating or updating a skill or
-  subagent, commit the scoped changes and push them directly to `origin/main`.
+- Keep SKILL.md frontmatter limited to `name` and `description`; validate every
+  content change before committing.
+- Keep skills usable by one agent. Treat subagent delegation as optional so the
+  Cursor conversion remains useful.
+- After completing scoped work in this repository, commit it and push directly
+  to `origin/main`.

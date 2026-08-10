@@ -1,0 +1,4 @@
+interface:
+  display_name: "Review Change"
+  short_description: "Review changes for defects and test gaps"
+  default_prompt: "Use $review-change to review the current diff."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Author Agentkit Content"
+  short_description: "Create and maintain agentkit content"
+  default_prompt: "Use $author-agentkit-content to add validated content."

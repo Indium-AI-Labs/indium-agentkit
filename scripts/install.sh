@@ -6,6 +6,7 @@ SCRIPT_DIR="$(cd -- "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
 REPO_ROOT="$(cd -- "${SCRIPT_DIR}/.." && pwd -P)"
 SKILLS_DIR="${REPO_ROOT}/skills"
 AGENTS_DIR="${REPO_ROOT}/agents"
+TEMPLATE_AGENTS_FILE="${REPO_ROOT}/templates/AGENTS.md"
 PROJECT_DIR=""
 
 if [[ $# -gt 1 ]]; then
@@ -56,8 +57,8 @@ link_path "${SKILLS_DIR}" "${HOME}/.antigravity/skills"
 link_path "${AGENTS_DIR}" "${HOME}/.claude/agents"
 
 if [[ -n "${PROJECT_DIR}" ]]; then
-  link_path "${REPO_ROOT}/AGENTS.md" "${PROJECT_DIR}/AGENTS.md"
-  link_path "${REPO_ROOT}/AGENTS.md" "${PROJECT_DIR}/CLAUDE.md"
+  link_path "${TEMPLATE_AGENTS_FILE}" "${PROJECT_DIR}/AGENTS.md"
+  link_path "${TEMPLATE_AGENTS_FILE}" "${PROJECT_DIR}/CLAUDE.md"
   link_path "${SKILLS_DIR}" "${PROJECT_DIR}/.claude/skills"
   link_path "${AGENTS_DIR}" "${PROJECT_DIR}/.claude/agents"
 

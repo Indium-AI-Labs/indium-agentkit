@@ -10,6 +10,7 @@ $ErrorActionPreference = "Stop"
 $RepoRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot ".."))
 $SkillsDir = Join-Path $RepoRoot "skills"
 $AgentsDir = Join-Path $RepoRoot "agents"
+$TemplateAgentsFile = Join-Path (Join-Path $RepoRoot "templates") "AGENTS.md"
 $HomeDir = $env:USERPROFILE
 
 if ([string]::IsNullOrWhiteSpace($HomeDir)) {
@@ -120,8 +121,8 @@ if (-not [string]::IsNullOrWhiteSpace($ProjectDir)) {
     }
 
     $ProjectDir = (Resolve-Path -LiteralPath $ProjectDir).Path
-    New-AgentKitLink -Target (Join-Path $RepoRoot "AGENTS.md") -LinkPath (Join-Path $ProjectDir "AGENTS.md")
-    New-AgentKitLink -Target (Join-Path $RepoRoot "AGENTS.md") -LinkPath (Join-Path $ProjectDir "CLAUDE.md")
+    New-AgentKitLink -Target $TemplateAgentsFile -LinkPath (Join-Path $ProjectDir "AGENTS.md")
+    New-AgentKitLink -Target $TemplateAgentsFile -LinkPath (Join-Path $ProjectDir "CLAUDE.md")
     New-AgentKitLink -Target $SkillsDir -LinkPath (Join-Path (Join-Path $ProjectDir ".claude") "skills")
     New-AgentKitLink -Target $AgentsDir -LinkPath (Join-Path (Join-Path $ProjectDir ".claude") "agents")
 

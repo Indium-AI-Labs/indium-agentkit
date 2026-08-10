@@ -1,0 +1,4 @@
+interface:
+  display_name: "Verify and Ship"
+  short_description: "Verify scoped changes before publishing"
+  default_prompt: "Use $verify-and-ship to verify and publish this change."

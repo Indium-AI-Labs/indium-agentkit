@@ -1,0 +1,4 @@
+interface:
+  display_name: "Test First Change"
+  short_description: "Build changes with focused behavior tests"
+  default_prompt: "Use $test-first-change to implement this behavior."

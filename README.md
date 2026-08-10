@@ -14,8 +14,9 @@ The repository uses two open, cross-agent formats:
   natively.
 - `AGENTS.md` is always-loaded project context: architecture, conventions,
   commands, and working notes. Codex, Cursor, Gemini CLI/Antigravity, Copilot,
-  Aider, Windsurf, and Zed read it natively. The installers link `CLAUDE.md` to
-  the same file so Claude Code gets the context without maintaining a duplicate.
+  Aider, Windsurf, and Zed read it natively. The root file governs this
+  repository; `templates/AGENTS.md` is the neutral file installers link into
+  consumer projects, along with `CLAUDE.md` for Claude Code.
 
 Cursor does not natively discover `SKILL.md`. The included Python builder turns
 each `skills/*/SKILL.md` into `.cursor/rules/<skill-directory>.mdc`, carrying
@@ -32,14 +33,26 @@ Code's format as the common denominator: YAML frontmatter containing `name`,
 indium-agentkit/
 ├── README.md
 ├── AGENTS.md
+├── templates/
+│   └── AGENTS.md
 ├── skills/
-│   └── .gitkeep
+│   ├── author-agentkit-content/
+│   ├── systematic-debugging/
+│   ├── test-first-change/
+│   ├── review-change/
+│   └── verify-and-ship/
 ├── agents/
-│   └── .gitkeep
+│   ├── explorer.md
+│   ├── reviewer.md
+│   └── verifier.md
 ├── scripts/
 │   ├── install.sh
 │   ├── install.ps1
-│   └── build_cursor_rules.py
+│   ├── build_cursor_rules.py
+│   └── validate_content.py
+├── tests/
+├── .github/workflows/validate.yml
+├── CONTRIBUTING.md
 └── .gitignore
 ```
 
@@ -58,9 +71,10 @@ Install the shared skills for the current user and Claude Code subagents:
 ./scripts/install.sh
 ```
 
-Optionally pass a project directory. This also links `AGENTS.md` and
-`CLAUDE.md`, adds project-local Claude Code skills and agents, and builds Cursor
-rules:
+Optionally pass a project directory. This links the neutral
+`templates/AGENTS.md` as `AGENTS.md` and `CLAUDE.md`, adds project-local Claude
+Code skills and agents, and builds Cursor rules. Existing real project files
+are left untouched:
 
 ```bash
 ./scripts/install.sh /path/to/project
@@ -104,10 +118,23 @@ To add a subagent, create `agents/<agent-name>.md` with `name`, `description`,
 The installer exposes these files to Claude Code globally and, when requested,
 inside a project.
 
-Edit the root `AGENTS.md` template with a project's actual stack, test command,
-lint command, layout, and conventions before linking it into that project.
+Create a project-specific `AGENTS.md` before installation when the neutral
+template is insufficient; the installer preserves an existing real file. Do
+not put consumer-project policy in this repository's root `AGENTS.md`.
+
+## Validation
+
+Validate content and run the dependency-free test suite before publishing:
+
+```bash
+python scripts/validate_content.py
+python -m unittest discover -s tests -v
+```
+
+GitHub Actions runs the same checks on pushes and pull requests.
 
 ## Status
 
-`skills/` and `agents/` are currently empty. This commit is scaffold-only: it
-contains documentation and install/build tooling, but no skills or subagents.
+The initial bundle contains five portable skills and three read-only Claude
+Code subagents. It is intentionally small; add specialized content only when a
+repeated workflow or isolated context demonstrably needs it.
