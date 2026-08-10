@@ -49,6 +49,32 @@ REQUIRED_HEADINGS = {
         "limitations",
         "handoff",
     },
+    "onboarding-guide": {
+        "project overview",
+        "prerequisites",
+        "development setup",
+        "source layout",
+        "key abstractions",
+        "common workflows",
+        "gotchas and tips",
+        "handoff",
+    },
+    "dependency-audit-report": {
+        "scope",
+        "inventory summary",
+        "vulnerability findings",
+        "license analysis",
+        "staleness and maintenance",
+        "recommendations",
+        "handoff",
+    },
+    "accessibility-audit-report": {
+        "scope",
+        "conformance summary",
+        "findings",
+        "areas not tested",
+        "handoff",
+    },
 }
 HEADING = re.compile(r"^#{1,6}\s+(.+?)\s*$", re.MULTILINE)
 HANDOFF_LABEL = re.compile(r"^\*\*([^*]+):\*\*", re.MULTILINE)
