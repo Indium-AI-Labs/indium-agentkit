@@ -15,6 +15,7 @@ python scripts/list_content.py --format markdown
 | skill | `backend-api` | Build robust typed API endpoints with safe contracts. |
 | skill | `ci-pipeline` | Design reliable CI pipelines with useful required checks. |
 | skill | `compliance-audit` | Audit code, configuration, and data flows against GDPR, SOC 2, HIPAA, and PCI-DSS compliance controls including PII redaction and audit logging. |
+| skill | `contract-testing` | Design and implement consumer-driven contract tests (Pact, MSW, Playwright) to verify interface compatibility between microservices and frontend/backend boundaries. |
 | skill | `data-pipeline-design` | Design safe ETL/ELT pipelines, data warehouse schemas, partition strategies, idempotency controls, and data quality assertions before implementation. |
 | skill | `database-design` | Design safe PostgreSQL schemas and staged migrations. |
 | skill | `dependency-audit` | Audit project dependencies for vulnerabilities, staleness, license risk, unused packages, and version-policy compliance using manifests, lockfiles, and available scanning tools. |
@@ -24,6 +25,7 @@ python scripts/list_content.py --format markdown
 | skill | `incident-triage` | Triage incidents with evidence, mitigation, and follow-up. |
 | skill | `infrastructure-review` | Review infrastructure for security, reliability, and cost risks. |
 | skill | `llm-eval-harness` | Design and execute evaluation benchmarks for prompts, RAG retrieval pipelines, and agent tools to measure token cost, latency, accuracy, and guardrail compliance. |
+| skill | `load-testing-suite` | Design, configure, and execute load and stress testing suites (k6, Locust) with target latency SLAs, throughput targets, and tear-down verification. |
 | skill | `observability-setup` | Instrument code with structured logging, metrics, distributed tracing, or alerting following existing observability patterns and avoiding credential exposure. |
 | skill | `onboard-to-codebase` | Generate a developer onboarding guide or codebase orientation by analyzing architecture, conventions, dependencies, workflows, and common tasks from the existing project. |
 | skill | `performance-optimization` | Measure, analyze, and optimize a specific performance bottleneck through profiling, targeted change, and comparative re-measurement with evidence. |
@@ -58,6 +60,7 @@ python scripts/list_content.py --format markdown
 | subagent | `migration-planner` | Read-only migration planner that inventories compatibility impact, rollout stages, rollback paths, and verification for schema, API, configuration, or file-format changes. |
 | subagent | `performance-profiler` | Read-only performance specialist that chooses approved profiling methods, compares evidence against a baseline, and reports bottlenecks. |
 | subagent | `release-engineer` | Prepare release plans and assess deployment readiness. |
+| subagent | `resilience-reviewer` | Read-only resilience specialist that analyzes circuit breakers, retry backoffs, timeout configurations, connection pools, and fallbacks. |
 | subagent | `reviewer` | Read-only independent reviewer for a completed diff, branch, or pull request who reports actionable findings with evidence. |
 | subagent | `runbook-writer` | Read-only specialist that analyzes infrastructure, code, monitoring, and failure modes to draft operational runbooks. |
 | subagent | `security-reviewer` | Read-only security reviewer that traces trust boundaries, sensitive data, authorization, and exploit paths in a scoped change. |
