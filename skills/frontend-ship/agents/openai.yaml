@@ -1,0 +1,4 @@
+interface:
+  display_name: "Frontend Ship"
+  short_description: "Ship accessible typed frontend features"
+  default_prompt: "Use $frontend-ship to build this frontend feature."

@@ -25,5 +25,8 @@ converted to Cursor rules; subagents use Claude Code-compatible frontmatter.
   content change before committing.
 - Keep skills usable by one agent. Treat subagent delegation as optional so the
   Cursor conversion remains useful.
-- After completing scoped work in this repository, commit it and push directly
-  to `origin/main`.
+- Make frequent, scoped commits as coherent units of completed work. Use concise,
+  professional imperative commit subjects that describe the shipped change (for
+  example, `Add handoff template validation`); avoid vague labels such as
+  `updates`, `changes`, or phase-based names such as `second wave`.
+- Push each completed scoped commit directly to `origin/main`.

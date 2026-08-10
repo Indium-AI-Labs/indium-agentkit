@@ -9,6 +9,9 @@ python scripts/list_content.py --format markdown
 | Kind | Name | Description |
 | --- | --- | --- |
 | skill | `author-agentkit-content` | Create and maintain distribution content. |
+| skill | `backend-api` | Build robust typed API endpoints with safe contracts. |
+| skill | `database-design` | Design safe PostgreSQL schemas and staged migrations. |
+| skill | `frontend-ship` | Build accessible, typed frontend features end to end. |
 | skill | `plan-change` | Plan features, fixes, refactors, and proposals. |
 | skill | `release-notes` | Draft factual notes from repository history. |
 | skill | `resolve-merge-conflicts` | Resolve conflicts while preserving intent. |
@@ -19,6 +22,9 @@ python scripts/list_content.py --format markdown
 | skill | `test-first-change` | Implement behavior with focused tests. |
 | skill | `verify-and-ship` | Verify scoped work before publishing. |
 | subagent | `explorer` | Map relevant code and uncertainties. |
+| subagent | `backend-builder` | Implement scoped typed API behavior with server-side safeguards. |
+| subagent | `database-architect` | Analyze schemas and propose safe, verified migration plans. |
+| subagent | `frontend-builder` | Implement scoped accessible UI features from agreed contracts. |
 | subagent | `migration-planner` | Analyze migration impact and rollback. |
 | subagent | `performance-profiler` | Measure and report performance bottlenecks. |
 | subagent | `reviewer` | Independently report actionable review findings. |

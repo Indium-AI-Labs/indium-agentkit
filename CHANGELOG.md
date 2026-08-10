@@ -6,6 +6,10 @@ All notable changes to this project are documented here.
 
 ### Added
 
+- Frontend, backend API, and database-design implementation workflows.
+- Specialist frontend-builder, backend-builder, and database-architect agents.
+- Shared feature, API, migration, and verification handoff templates with
+  structural validation.
 - Per-item skill and subagent installation with installation diagnostics.
 - Content scaffolding and catalog tooling.
 - Planning, merge-conflict, migration, security-review, and release-note skills.

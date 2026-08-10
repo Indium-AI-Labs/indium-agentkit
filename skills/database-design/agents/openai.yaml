@@ -1,0 +1,4 @@
+interface:
+  display_name: "Database Design"
+  short_description: "Design safe PostgreSQL data models"
+  default_prompt: "Use $database-design to plan this data model change."

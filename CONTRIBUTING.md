@@ -26,13 +26,16 @@ Run these commands before committing:
 
 ```bash
 python scripts/validate_content.py
+python scripts/validate_handoff.py --templates-dir templates/handoffs
 python -m unittest discover -s tests -v
 python scripts/build_cursor_rules.py --skills-dir skills --out-dir .cursor/rules
 python scripts/list_content.py --format markdown
 ```
 
-Commit only the scoped change. For this repository, push completed work directly
-to `origin/main` as required by the root `AGENTS.md`.
+Commit frequent, scoped, coherent units of completed work. Use concise,
+professional imperative subjects that say what changed, such as `Add handoff
+template validation`; avoid vague or phase-based subjects. Push each completed
+scoped commit directly to `origin/main` as required by the root `AGENTS.md`.
 
 Use `scripts/scaffold_content.py` to create a valid starter file and
 `scripts/check_install.py` to diagnose an installation without changing it.

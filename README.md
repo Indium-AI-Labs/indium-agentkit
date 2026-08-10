@@ -138,6 +138,7 @@ Validate content and run the dependency-free test suite before publishing:
 
 ```bash
 python scripts/validate_content.py
+python scripts/validate_handoff.py --templates-dir templates/handoffs
 python -m unittest discover -s tests -v
 ```
 
@@ -153,5 +154,7 @@ and [release guidance](docs/releasing.md).
 
 ## Status
 
-The current bundle contains ten portable skills and six read-only Claude Code
-subagents. See `CATALOG.md` for the generated inventory.
+The current bundle contains thirteen portable skills, seven read-only specialists,
+and two scoped implementation subagents. The product-engineering pack includes
+frontend, backend API, and database-design workflows plus reusable handoff
+templates. See `CATALOG.md` for the generated inventory.

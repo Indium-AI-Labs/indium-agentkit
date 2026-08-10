@@ -1,0 +1,4 @@
+interface:
+  display_name: "Backend API"
+  short_description: "Build robust typed API endpoints"
+  default_prompt: "Use $backend-api to implement this server capability."
