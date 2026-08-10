@@ -39,3 +39,6 @@ scoped commit directly to `origin/main` as required by the root `AGENTS.md`.
 
 Use `scripts/scaffold_content.py` to create a valid starter file and
 `scripts/check_install.py` to diagnose an installation without changing it.
+Use `scripts/codex_delegate.py` to turn a portable `agents/<name>.md` role into
+a bounded packet for a native Codex orchestrator; it must remain side-effect
+free and must not call a model directly.

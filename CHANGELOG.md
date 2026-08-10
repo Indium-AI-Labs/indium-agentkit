@@ -6,6 +6,7 @@ All notable changes to this project are documented here.
 
 ### Added
 
+- Codex delegation guidance and a dependency-free delegation packet adapter.
 - Deployment-safety, CI-pipeline, incident-triage, and infrastructure-review
   workflows.
 - Release-engineer, CI-verifier, and incident-commander specialist agents.

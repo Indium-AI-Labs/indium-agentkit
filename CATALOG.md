@@ -14,6 +14,7 @@ python scripts/list_content.py --format markdown
 | skill | `author-agentkit-content` | Create or update indium-agentkit skills, subagents, templates, validation, and documentation. Use when adding, revising, validating, or publishing content in this distribution repository. |
 | skill | `backend-api` | Build robust typed API endpoints with safe contracts. |
 | skill | `ci-pipeline` | Design reliable CI pipelines with useful required checks. |
+| skill | `delegate-work` | Plan bounded Codex subagent delegation with structured handoffs. |
 | skill | `compliance-audit` | Audit code, configuration, and data flows against GDPR, SOC 2, HIPAA, and PCI-DSS compliance controls including PII redaction and audit logging. |
 | skill | `contract-testing` | Design and implement consumer-driven contract tests (Pact, MSW, Playwright) to verify interface compatibility between microservices and frontend/backend boundaries. |
 | skill | `data-pipeline-design` | Design safe ETL/ELT pipelines, data warehouse schemas, partition strategies, idempotency controls, and data quality assertions before implementation. |

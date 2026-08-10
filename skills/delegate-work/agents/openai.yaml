@@ -1,0 +1,4 @@
+interface:
+  display_name: "Delegate Work"
+  short_description: "Plan bounded Codex subagent delegation"
+  default_prompt: "Use $delegate-work to delegate this task safely."

@@ -149,12 +149,16 @@ GitHub Actions runs the same checks on pushes and pull requests.
 Use `python scripts/check_install.py --project /path/to/project` to inspect an
 installation, `scripts/scaffold_content.py` to create valid starter content, and
 `scripts/list_content.py --format json` to consume the catalog programmatically.
+For Codex delegation, use `scripts/codex_delegate.py` to produce a structured
+packet from an `agents/<name>.md` role. The adapter does not invoke a model;
+Codex's native orchestrator owns permissions, concurrency, retries, and final
+integration. See [Codex delegation guidance](codex/README.md).
 See [compatibility details](docs/compatibility.md), [security guidance](SECURITY.md),
 and [release guidance](docs/releasing.md).
 
 ## Status
 
-The current bundle contains thirty-five portable skills, twenty-one read-only
+The current bundle contains thirty-six portable skills, twenty-one read-only
 specialists, and two scoped implementation subagents. The product-engineering
 pack includes frontend, backend API, database-design, CI, deployment-safety,
 incident, and infrastructure-review workflows. See `CATALOG.md` for the
