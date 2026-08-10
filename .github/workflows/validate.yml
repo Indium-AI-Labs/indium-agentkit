@@ -17,5 +17,7 @@ jobs:
         run: python3 scripts/validate_content.py
       - name: Build Cursor rules
         run: python3 scripts/build_cursor_rules.py --skills-dir skills --out-dir .cursor/rules
+      - name: List catalog content
+        run: python3 scripts/list_content.py --format markdown
       - name: Run tests
         run: python3 -m unittest discover -s tests -v

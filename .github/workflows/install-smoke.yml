@@ -1,0 +1,43 @@
+name: Installer smoke tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  bash:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install and inspect with Bash
+        run: |
+          install_test_root="$(mktemp -d)"
+          install_test_home="$install_test_root/home"
+          install_test_project="$install_test_root/project"
+          mkdir -p "$install_test_home" "$install_test_project"
+          env HOME="$install_test_home" bash scripts/install.sh "$install_test_project"
+          python3 scripts/check_install.py --home "$install_test_home" --project "$install_test_project"
+  powershell:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install and inspect with PowerShell
+        shell: pwsh
+        run: |
+          $installTestRoot = Join-Path $env:RUNNER_TEMP "indium-agentkit-install-smoke"
+          $installTestHome = Join-Path $installTestRoot "home"
+          $installTestProject = Join-Path $installTestRoot "project"
+          New-Item -ItemType Directory -Force -Path $installTestHome, $installTestProject | Out-Null
+          $originalUserProfile = $env:USERPROFILE
+          try {
+            $env:USERPROFILE = $installTestHome
+            ./scripts/install.ps1 -ProjectDir $installTestProject
+            python scripts/check_install.py --home $installTestHome --project $installTestProject
+          }
+          finally {
+            $env:USERPROFILE = $originalUserProfile
+          }

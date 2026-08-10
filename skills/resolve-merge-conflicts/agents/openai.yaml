@@ -1,0 +1,4 @@
+interface:
+  display_name: "Resolve Merge Conflicts"
+  short_description: "Resolve conflicts while preserving intent"
+  default_prompt: "Use $resolve-merge-conflicts to resolve these conflicts."

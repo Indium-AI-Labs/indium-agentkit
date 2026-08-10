@@ -1,0 +1,4 @@
+interface:
+  display_name: "Release Notes"
+  short_description: "Draft factual notes from release history"
+  default_prompt: "Use $release-notes to draft this release summary."

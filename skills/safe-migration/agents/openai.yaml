@@ -1,0 +1,4 @@
+interface:
+  display_name: "Safe Migration"
+  short_description: "Plan compatible migrations with rollback"
+  default_prompt: "Use $safe-migration to plan this migration."

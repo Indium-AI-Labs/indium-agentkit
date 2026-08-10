@@ -28,7 +28,11 @@ Run these commands before committing:
 python scripts/validate_content.py
 python -m unittest discover -s tests -v
 python scripts/build_cursor_rules.py --skills-dir skills --out-dir .cursor/rules
+python scripts/list_content.py --format markdown
 ```
 
 Commit only the scoped change. For this repository, push completed work directly
 to `origin/main` as required by the root `AGENTS.md`.
+
+Use `scripts/scaffold_content.py` to create a valid starter file and
+`scripts/check_install.py` to diagnose an installation without changing it.

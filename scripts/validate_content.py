@@ -122,7 +122,13 @@ def validate_secrets(path: Path) -> list[str]:
 
 def validate_repository(root: Path) -> list[tuple[Path, str]]:
     failures: list[tuple[Path, str]] = []
-    required = ["AGENTS.md", "templates/AGENTS.md", "skills", "agents", "scripts/build_cursor_rules.py"]
+    required = [
+        "AGENTS.md", "templates/AGENTS.md", "skills", "agents",
+        "scripts/build_cursor_rules.py", "scripts/check_install.py",
+        "scripts/scaffold_content.py", "scripts/list_content.py",
+        "docs/compatibility.md", "docs/security.md", "docs/releasing.md",
+        "CATALOG.md", "CHANGELOG.md", "SECURITY.md",
+    ]
     for relative_path in required:
         if not (root / relative_path).exists():
             failures.append((root / relative_path, "required path is missing"))

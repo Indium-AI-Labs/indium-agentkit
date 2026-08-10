@@ -1,0 +1,4 @@
+interface:
+  display_name: "Plan Change"
+  short_description: "Create an implementation-ready change plan"
+  default_prompt: "Use $plan-change to plan this request."

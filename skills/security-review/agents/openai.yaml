@@ -1,0 +1,4 @@
+interface:
+  display_name: "Security Review"
+  short_description: "Review scoped changes for security risks"
+  default_prompt: "Use $security-review to assess this change."

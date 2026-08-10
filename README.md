@@ -37,31 +37,41 @@ indium-agentkit/
 │   └── AGENTS.md
 ├── skills/
 │   ├── author-agentkit-content/
-│   ├── systematic-debugging/
-│   ├── test-first-change/
-│   ├── review-change/
+│   ├── plan-change/
+│   ├── safe-migration/
+│   ├── security-review/
+│   ├── ...
 │   └── verify-and-ship/
 ├── agents/
 │   ├── explorer.md
-│   ├── reviewer.md
+│   ├── migration-planner.md
+│   ├── security-reviewer.md
+│   ├── ...
 │   └── verifier.md
 ├── scripts/
 │   ├── install.sh
 │   ├── install.ps1
 │   ├── build_cursor_rules.py
-│   └── validate_content.py
+│   ├── validate_content.py
+│   ├── check_install.py
+│   ├── scaffold_content.py
+│   └── list_content.py
 ├── tests/
 ├── .github/workflows/validate.yml
+├── docs/
+├── CATALOG.md
+├── CHANGELOG.md
+├── SECURITY.md
 ├── CONTRIBUTING.md
 └── .gitignore
 ```
 
 ## Install
 
-The installers create symlinks rather than copies, so changes in this checkout
-are immediately visible to the supported agents. They are safe to run again.
-An existing real file or directory at a destination is reported and left alone;
-an existing symlink is kept or updated as needed.
+The installers create per-item symlinks rather than copies, so changes in this
+checkout are immediately visible to supported agents while existing user skill
+directories remain intact. They are safe to run again. An existing real item or
+unknown symlink at a destination is reported and left alone.
 
 ### macOS and Linux
 
@@ -133,8 +143,15 @@ python -m unittest discover -s tests -v
 
 GitHub Actions runs the same checks on pushes and pull requests.
 
+## Tools and compatibility
+
+Use `python scripts/check_install.py --project /path/to/project` to inspect an
+installation, `scripts/scaffold_content.py` to create valid starter content, and
+`scripts/list_content.py --format json` to consume the catalog programmatically.
+See [compatibility details](docs/compatibility.md), [security guidance](SECURITY.md),
+and [release guidance](docs/releasing.md).
+
 ## Status
 
-The initial bundle contains five portable skills and three read-only Claude
-Code subagents. It is intentionally small; add specialized content only when a
-repeated workflow or isolated context demonstrably needs it.
+The current bundle contains ten portable skills and six read-only Claude Code
+subagents. See `CATALOG.md` for the generated inventory.
