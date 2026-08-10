@@ -25,6 +25,10 @@ converted to Cursor rules; subagents use Claude Code-compatible frontmatter.
   content change before committing.
 - Keep skills usable by one agent. Treat subagent delegation as optional so the
   Cursor conversion remains useful.
+- After adding, removing, or changing any skill or subagent, regenerate
+  `CATALOG.md` with `python scripts/generate_catalog.py` and run
+  `python scripts/diff_catalog.py` before committing. Catalog changes belong in
+  the same commit as the content change.
 - Make frequent, scoped commits as coherent units of completed work. Use concise,
   professional imperative commit subjects that describe the shipped change (for
   example, `Add handoff template validation`); avoid vague labels such as
