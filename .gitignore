@@ -1,0 +1,4 @@
+.cursor/rules/
+CLAUDE.md
+__pycache__/
+*.pyc
