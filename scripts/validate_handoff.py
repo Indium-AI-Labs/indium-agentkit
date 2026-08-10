@@ -75,6 +75,14 @@ REQUIRED_HEADINGS = {
         "areas not tested",
         "handoff",
     },
+    "llm-eval-report": {
+        "scope",
+        "evaluation metrics",
+        "test dataset performance",
+        "cost and latency comparison",
+        "safety and guardrails",
+        "handoff",
+    },
 }
 HEADING = re.compile(r"^#{1,6}\s+(.+?)\s*$", re.MULTILINE)
 HANDOFF_LABEL = re.compile(r"^\*\*([^*]+):\*\*", re.MULTILINE)

@@ -14,6 +14,7 @@ python scripts/list_content.py --format markdown
 | skill | `author-agentkit-content` | Create or update indium-agentkit skills, subagents, templates, validation, and documentation. Use when adding, revising, validating, or publishing content in this distribution repository. |
 | skill | `backend-api` | Build robust typed API endpoints with safe contracts. |
 | skill | `ci-pipeline` | Design reliable CI pipelines with useful required checks. |
+| skill | `data-pipeline-design` | Design safe ETL/ELT pipelines, data warehouse schemas, partition strategies, idempotency controls, and data quality assertions before implementation. |
 | skill | `database-design` | Design safe PostgreSQL schemas and staged migrations. |
 | skill | `dependency-audit` | Audit project dependencies for vulnerabilities, staleness, license risk, unused packages, and version-policy compliance using manifests, lockfiles, and available scanning tools. |
 | skill | `deployment-safety` | Plan and verify staged deployments with safe rollback. |
@@ -21,6 +22,7 @@ python scripts/list_content.py --format markdown
 | skill | `frontend-ship` | Build accessible, typed frontend features end to end. |
 | skill | `incident-triage` | Triage incidents with evidence, mitigation, and follow-up. |
 | skill | `infrastructure-review` | Review infrastructure for security, reliability, and cost risks. |
+| skill | `llm-eval-harness` | Design and execute evaluation benchmarks for prompts, RAG retrieval pipelines, and agent tools to measure token cost, latency, accuracy, and guardrail compliance. |
 | skill | `observability-setup` | Instrument code with structured logging, metrics, distributed tracing, or alerting following existing observability patterns and avoiding credential exposure. |
 | skill | `onboard-to-codebase` | Generate a developer onboarding guide or codebase orientation by analyzing architecture, conventions, dependencies, workflows, and common tasks from the existing project. |
 | skill | `performance-optimization` | Measure, analyze, and optimize a specific performance bottleneck through profiling, targeted change, and comparative re-measurement with evidence. |
@@ -41,6 +43,7 @@ python scripts/list_content.py --format markdown
 | subagent | `api-designer` | Read-only API design specialist that analyzes requirements, existing conventions, and data models to propose typed contract designs. |
 | subagent | `backend-builder` | Implement scoped typed API behavior with server-side safeguards. |
 | subagent | `ci-verifier` | Diagnose CI workflows and report exact verification evidence. |
+| subagent | `data-engineer` | Read-only data engineering specialist that inspects schemas, pipeline transformations, partitioning strategies, and query performance. |
 | subagent | `database-architect` | Analyze schemas and propose safe, verified migration plans. |
 | subagent | `dependency-auditor` | Read-only dependency specialist that scans manifests, lockfiles, and advisory databases for vulnerabilities, staleness, and license risks. |
 | subagent | `doc-writer` | Read-only documentation specialist that analyzes code, tests, and history to draft accurate project documentation. |
@@ -48,6 +51,7 @@ python scripts/list_content.py --format markdown
 | subagent | `explorer` | Read-only codebase explorer that maps relevant files, control flow, conventions, and uncertainties for a focused task. |
 | subagent | `frontend-builder` | Implement scoped accessible UI features from agreed contracts. |
 | subagent | `incident-commander` | Coordinate evidence-based incident response without production edits. |
+| subagent | `llm-evaluator` | Read-only LLM evaluation specialist that inspects prompt definitions, RAG retrieval logic, benchmark datasets, and guardrails. |
 | subagent | `migration-planner` | Read-only migration planner that inventories compatibility impact, rollout stages, rollback paths, and verification for schema, API, configuration, or file-format changes. |
 | subagent | `performance-profiler` | Read-only performance specialist that chooses approved profiling methods, compares evidence against a baseline, and reports bottlenecks. |
 | subagent | `release-engineer` | Prepare release plans and assess deployment readiness. |
