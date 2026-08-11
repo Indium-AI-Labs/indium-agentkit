@@ -19,6 +19,8 @@ Create subagents as `agents/<name>.md`. Include `name`, `description`, `tools`,
 and `model` frontmatter. Define a narrow responsibility, clear output format,
 and write restrictions. Prefer read-only specialist agents over generic
 implementers.
+Use [`templates/subagent.md`](templates/subagent.md) as the starting structure
+for scope, trust boundaries, input/output contracts, limits, and failure handling.
 
 ## Required checks
 

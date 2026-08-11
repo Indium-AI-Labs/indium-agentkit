@@ -128,6 +128,7 @@ def validate_repository(root: Path) -> list[tuple[Path, str]]:
         "scripts/scaffold_content.py", "scripts/list_content.py",
         "scripts/codex_delegate.py", "codex/README.md",
         "scripts/validate_handoff.py",
+        "templates/subagent.md",
         "scripts/generate_catalog.py", "scripts/diff_catalog.py",
         "scripts/sync_vendor_rules.py", "scripts/export_context_bundle.py",
         "scripts/verify_skill_overlap.py",

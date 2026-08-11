@@ -26,6 +26,9 @@ Skills therefore have one source of truth while remaining available to Cursor.
 Subagents do not yet share a cross-tool schema. This repository uses Claude
 Code's format as the common denominator: YAML frontmatter containing `name`,
 `description`, `tools`, and `model`, followed by the subagent's Markdown prompt.
+Use [`templates/subagent.md`](templates/subagent.md) when authoring a new role;
+it is based on the repository's `agent-orchestrator` inspection structure and
+keeps safety, contracts, limits, and handoffs explicit.
 
 ## Repository layout
 
