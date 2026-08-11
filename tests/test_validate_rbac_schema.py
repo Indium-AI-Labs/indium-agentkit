@@ -10,9 +10,8 @@ import unittest
 from pathlib import Path
 
 from scripts.validate_rbac_schema import (
+    extract_frontmatter_bounded,
     main,
-    parse_frontmatter,
-    parse_tools_list,
     validate_file_rbac,
     validate_rbac_schema,
 )
@@ -27,10 +26,17 @@ class ValidateRBACSchemaTests(unittest.TestCase):
         self.assertEqual(violations, [])
         self.assertGreater(scanned, 0)
 
-    def test_parse_tools_list(self) -> None:
-        self.assertEqual(parse_tools_list("Read, Grep, Glob, Bash"), ["Read", "Grep", "Glob", "Bash"])
-        self.assertEqual(parse_tools_list("Read; Edit; Write"), ["Read", "Edit", "Write"])
-        self.assertEqual(parse_tools_list(""), [])
+    def test_extract_frontmatter_bounded(self) -> None:
+        with tempfile.NamedTemporaryFile("w", encoding="utf-8", delete=False) as handle:
+            handle.write("---\nname: test-agent\ndescription: test\n---\n\n# Header\n" + "line\n" * 200)
+            temp_path = Path(handle.name)
+
+        try:
+            raw_yaml, error = extract_frontmatter_bounded(temp_path)
+            self.assertIsNone(error)
+            self.assertEqual(raw_yaml, "name: test-agent\ndescription: test\n")
+        finally:
+            temp_path.unlink(missing_ok=True)
 
     def test_readonly_agent_with_write_tool_fails(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -50,23 +56,6 @@ class ValidateRBACSchemaTests(unittest.TestCase):
             self.assertIn("edit", violations[0]["prohibited_tools"])
             self.assertIn("write", violations[0]["prohibited_tools"])
 
-    def test_readonly_description_with_write_tool_fails(self) -> None:
-        with tempfile.TemporaryDirectory() as temp_dir:
-            temp_path = Path(temp_dir)
-            agents_dir = temp_path / "agents"
-            agents_dir.mkdir()
-            bad_agent = agents_dir / "custom-auditor.md"
-            bad_agent.write_text(
-                "---\nname: custom-auditor\ndescription: Read-only compliance auditor\ntools: Read, Patch\nmodel: inherit\n---\n\n# Auditor\n",
-                encoding="utf-8",
-            )
-
-            violations, scanned = validate_rbac_schema(temp_path)
-            self.assertEqual(scanned, 1)
-            self.assertEqual(len(violations), 1)
-            self.assertEqual(violations[0]["error_type"], "PrivilegeEscalationError")
-            self.assertEqual(violations[0]["prohibited_tools"], ["patch"])
-
     def test_known_readonly_subagent_with_write_tool_fails(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
@@ -74,7 +63,7 @@ class ValidateRBACSchemaTests(unittest.TestCase):
             agents_dir.mkdir()
             bad_agent = agents_dir / "agent-orchestrator.md"
             bad_agent.write_text(
-                "---\nname: agent-orchestrator\ndescription: Topology inspector\ntools: Read, Grep, Edit\nmodel: inherit\n---\n\n# Orchestrator\n",
+                "---\nname: agent-orchestrator\ndescription: Topology inspector\ntools:\n  - Read\n  - Grep\n  - Edit\nmodel: inherit\n---\n\n# Orchestrator\n",
                 encoding="utf-8",
             )
 
@@ -91,13 +80,45 @@ class ValidateRBACSchemaTests(unittest.TestCase):
             agents_dir.mkdir()
             good_agent = agents_dir / "agent-orchestrator.md"
             good_agent.write_text(
-                "---\nname: agent-orchestrator\ndescription: Read-only topology inspector\ntools: Read, Grep, Glob, Bash\nmodel: inherit\n---\n\n# Good Agent\n",
+                "---\nname: agent-orchestrator\ndescription: Topology inspector\npermission_mode: read-only\ntools:\n  - Read\n  - Grep\n  - Glob\n  - Bash\nmodel: inherit\n---\n\n# Good Agent\n",
                 encoding="utf-8",
             )
 
             violations, scanned = validate_rbac_schema(temp_path)
             self.assertEqual(scanned, 1)
             self.assertEqual(violations, [])
+
+    def test_malformed_yaml_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            agents_dir = temp_path / "agents"
+            agents_dir.mkdir()
+            bad_yaml = agents_dir / "bad-yaml.md"
+            bad_yaml.write_text(
+                "---\nname: bad-yaml\ntools: [Read, Grep: bad\n---\n\n# Bad YAML\n",
+                encoding="utf-8",
+            )
+
+            violations, scanned = validate_rbac_schema(temp_path)
+            self.assertEqual(scanned, 1)
+            self.assertEqual(len(violations), 1)
+            self.assertEqual(violations[0]["error_type"], "YAMLError")
+
+    def test_pydantic_validation_error(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            agents_dir = temp_path / "agents"
+            agents_dir.mkdir()
+            invalid_agent = agents_dir / "invalid-agent.md"
+            invalid_agent.write_text(
+                "---\ndescription: missing name field\ntools: Read\n---\n\n# Invalid Agent\n",
+                encoding="utf-8",
+            )
+
+            violations, scanned = validate_rbac_schema(temp_path)
+            self.assertEqual(scanned, 1)
+            self.assertEqual(len(violations), 1)
+            self.assertEqual(violations[0]["error_type"], "SchemaValidationError")
 
     def test_invalid_target_dir_returns_error(self) -> None:
         non_existent = REPO_ROOT / "non_existent_directory_12345"

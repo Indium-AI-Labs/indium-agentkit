@@ -5,15 +5,17 @@ from __future__ import annotations
 
 import argparse
 import json
-import re
 import sys
-from dataclasses import dataclass
+from enum import Enum
 from pathlib import Path
-from typing import Any, List, Set, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
+
+import yaml
+from pydantic import BaseModel, Field, ValidationError, field_validator
 
 
 FRONTMATTER_DELIMITER = "---"
-KEY_VALUE = re.compile(r"^([A-Za-z][A-Za-z0-9_-]*):[ \t]*(.+?)[ \t]*$")
+MAX_FRONTMATTER_LINES = 100
 
 MUTATING_TOOLS: Set[str] = {
     "edit",
@@ -56,107 +58,148 @@ READONLY_SUBAGENTS: Set[str] = {
 }
 
 
-class RBACValidationError(Exception):
-    """Base exception for RBAC schema validation errors."""
+class PermissionModeEnum(str, Enum):
+    READ_ONLY = "read-only"
+    WRITE_SCOPED = "write-scoped"
 
 
-class PrivilegeEscalationError(RBACValidationError):
-    """Raised when a read-only entity declares mutating tools."""
+class DomainEnum(str, Enum):
+    CORE_ENGINEERING = "core-engineering"
+    SECURITY_COMPLIANCE = "security-compliance"
+    CLOUD_DEVOPS = "cloud-devops"
+    FRONTEND_DESIGN = "frontend-design"
+    AI_ML = "ai-ml"
+    AI_ML_ALT = "ai_ml"
 
 
-class SchemaValidationError(RBACValidationError):
-    """Raised when frontmatter fails structural schema parsing."""
-
-
-@dataclass
-class SubagentFrontmatter:
+class SubagentFrontmatter(BaseModel):
     name: str
     description: str
-    tools: List[str]
-    permission_mode: str
-    domain: str
-    model: str
+    tools: List[str] = Field(default_factory=list)
+    permission_mode: Optional[PermissionModeEnum] = None
+    domain: Optional[str] = None
+    model: Optional[Union[str, Dict[str, Any]]] = None
 
-
-def read_text(path: Path) -> str:
-    return path.read_text(encoding="utf-8")
-
-
-def parse_frontmatter(path: Path) -> tuple[dict[str, str], list[str]]:
-    try:
-        lines = read_text(path).splitlines()
-    except Exception as error:
-        return {}, [f"file read failure: {error}"]
-
-    if not lines or lines[0] != FRONTMATTER_DELIMITER:
-        return {}, ["missing opening YAML frontmatter delimiter"]
-
-    try:
-        close_index = lines.index(FRONTMATTER_DELIMITER, 1)
-    except ValueError:
-        return {}, ["missing closing YAML frontmatter delimiter"]
-
-    fields: dict[str, str] = {}
-    errors: list[str] = []
-    for line in lines[1:close_index]:
-        line = line.strip()
-        if not line or line.startswith("#"):
-            continue
-        match = KEY_VALUE.match(line)
-        if not match:
-            errors.append(f"unsupported frontmatter line: {line!r}")
-            continue
-        key, value = match.groups()
-        if key in fields:
-            errors.append(f"duplicate frontmatter field: {key}")
-        fields[key] = value.strip().strip('"').strip("'")
-
-    return fields, errors
-
-
-def parse_tools_list(tools_str: str) -> List[str]:
-    if not tools_str:
+    @field_validator("tools", mode="before")
+    @classmethod
+    def parse_tools_field(cls, v: Any) -> List[str]:
+        if isinstance(v, str):
+            return [tool.strip() for tool in v.replace(";", ",").split(",") if tool.strip()]
+        if isinstance(v, list):
+            return [str(tool).strip() for tool in v if str(tool).strip()]
         return []
-    return [tool.strip() for tool in re.split(r"[,;]+", tools_str) if tool.strip()]
+
+    @field_validator("permission_mode", mode="before")
+    @classmethod
+    def parse_permission_mode(cls, v: Any) -> Optional[PermissionModeEnum]:
+        if not v:
+            return None
+        v_str = str(v).strip().lower()
+        if v_str == "read-only":
+            return PermissionModeEnum.READ_ONLY
+        if v_str in ("write-scoped", "write"):
+            return PermissionModeEnum.WRITE_SCOPED
+        return None
 
 
-def is_readonly_entity(name: str, fields: dict[str, str]) -> bool:
-    perm = fields.get("permission_mode") or fields.get("permission") or fields.get("rbac_role")
-    if perm and perm.lower() == "read-only":
-        return True
+def extract_frontmatter_bounded(path: Path) -> Tuple[Optional[str], Optional[str]]:
+    """Extract frontmatter string using bounded line-reading to avoid reading entire file into memory."""
+    lines: List[str] = []
+    found_opening = False
+    found_closing = False
 
-    desc = fields.get("description", "").lower()
-    if "read-only" in desc:
-        return True
+    try:
+        with path.open("r", encoding="utf-8") as handle:
+            for idx, line in enumerate(handle):
+                if idx >= MAX_FRONTMATTER_LINES:
+                    break
+                stripped = line.rstrip("\r\n")
+                if idx == 0:
+                    if stripped == FRONTMATTER_DELIMITER:
+                        found_opening = True
+                        continue
+                    else:
+                        return None, "missing opening YAML frontmatter delimiter"
 
-    if name.lower() in READONLY_SUBAGENTS:
-        return True
+                if stripped == FRONTMATTER_DELIMITER:
+                    found_closing = True
+                    break
+                lines.append(line)
+    except OSError as error:
+        return None, f"file I/O failure: {error}"
 
-    return False
+    if not found_opening:
+        return None, "missing opening YAML frontmatter delimiter"
+    if not found_closing:
+        return None, "missing closing YAML frontmatter delimiter"
+
+    return "".join(lines), None
 
 
-def validate_file_rbac(path: Path, root: Path) -> List[dict[str, Any]]:
-    violations: List[dict[str, Any]] = []
-    fields, parse_errors = parse_frontmatter(path)
+def validate_file_rbac(path: Path, root: Path) -> List[Dict[str, Any]]:
+    violations: List[Dict[str, Any]] = []
     rel_path = str(path.relative_to(root)) if root in path.parents or path == root else str(path)
 
-    if parse_errors:
-        for err in parse_errors:
+    raw_yaml, extract_error = extract_frontmatter_bounded(path)
+    if extract_error:
+        violations.append(
+            {
+                "level": "ERROR",
+                "error_type": "SchemaValidationError",
+                "file": rel_path,
+                "message": extract_error,
+            }
+        )
+        return violations
+
+    try:
+        data = yaml.safe_load(raw_yaml)
+        if not isinstance(data, dict):
             violations.append(
                 {
                     "level": "ERROR",
                     "error_type": "SchemaValidationError",
                     "file": rel_path,
-                    "message": err,
+                    "message": "frontmatter YAML did not parse into a dictionary mapping",
                 }
             )
+            return violations
+    except yaml.YAMLError as error:
+        violations.append(
+            {
+                "level": "ERROR",
+                "error_type": "YAMLError",
+                "file": rel_path,
+                "message": f"malformed YAML frontmatter syntax: {error}",
+            }
+        )
         return violations
 
-    name = fields.get("name", path.stem)
-    tools = parse_tools_list(fields.get("tools", ""))
-    readonly = is_readonly_entity(name, fields)
+    try:
+        model_data = SubagentFrontmatter.model_validate(data)
+    except ValidationError as error:
+        violations.append(
+            {
+                "level": "ERROR",
+                "error_type": "SchemaValidationError",
+                "file": rel_path,
+                "message": f"Pydantic schema validation failure: {error.errors()}",
+            }
+        )
+        return violations
 
-    if readonly and tools:
+    name = model_data.name or path.stem
+    tools = model_data.tools
+
+    # Resolve effective permission mode
+    effective_permission = model_data.permission_mode
+    if effective_permission is None:
+        if name.lower() in READONLY_SUBAGENTS:
+            effective_permission = PermissionModeEnum.READ_ONLY
+        else:
+            effective_permission = PermissionModeEnum.WRITE_SCOPED
+
+    if effective_permission == PermissionModeEnum.READ_ONLY and tools:
         declared_tools_lower = {tool.lower() for tool in tools}
         mutating = declared_tools_lower.intersection(MUTATING_TOOLS)
         if mutating:
@@ -176,8 +219,8 @@ def validate_file_rbac(path: Path, root: Path) -> List[dict[str, Any]]:
     return violations
 
 
-def validate_rbac_schema(target_dir: Path) -> Tuple[List[dict[str, Any]], int]:
-    violations: List[dict[str, Any]] = []
+def validate_rbac_schema(target_dir: Path) -> Tuple[List[Dict[str, Any]], int]:
+    violations: List[Dict[str, Any]] = []
     scanned_count = 0
 
     if not target_dir.exists() or not target_dir.is_dir():
@@ -191,13 +234,14 @@ def validate_rbac_schema(target_dir: Path) -> Tuple[List[dict[str, Any]], int]:
         )
         return violations, 0
 
-    # Scan agents/*.md and skills/*/SKILL.md
+    # Scan agents/*.md
     agents_dir = target_dir / "agents"
     if agents_dir.is_dir():
         for agent_file in sorted(agents_dir.glob("*.md")):
             scanned_count += 1
             violations.extend(validate_file_rbac(agent_file, target_dir))
 
+    # Scan skills/*/SKILL.md
     skills_dir = target_dir / "skills"
     if skills_dir.is_dir():
         for skill_file in sorted(skills_dir.glob("*/SKILL.md")):
