@@ -46,6 +46,7 @@ python scripts/list_content.py --format markdown
 | skill | `write-documentation` | Author, update, or audit project documentation — READMEs, architecture decisions, API references, onboarding guides, and inline doc — from code evidence without inventing behavior. |
 | skill | `write-runbook` | Create or update an operational runbook for a service, feature, or failure mode with detection, diagnosis, mitigation, recovery, and escalation procedures. |
 | subagent | `accessibility-checker` | Read-only accessibility specialist that evaluates markup, ARIA usage, color contrast, keyboard flow, and screen reader compatibility. |
+| subagent | `agent-orchestrator` | Read-only specialist that inspects multi-agent system states, JSON-RPC routing boundaries, context window growth, and delegation chains to prevent execution loops and payload bloat. |
 | subagent | `api-designer` | Read-only API design specialist that analyzes requirements, existing conventions, and data models to propose typed contract designs. |
 | subagent | `backend-builder` | Implement scoped typed API behavior with server-side safeguards. |
 | subagent | `ci-verifier` | Diagnose CI workflows and report exact verification evidence. |
