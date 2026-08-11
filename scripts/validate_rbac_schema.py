@@ -31,32 +31,6 @@ MUTATING_TOOLS: Set[str] = {
     "write_to_file",
 }
 
-READONLY_SUBAGENTS: Set[str] = {
-    "ebpf-specialist",
-    "webgpu-architect",
-    "formal-verifier",
-    "wasm-specialist",
-    "iot-embedded-auditor",
-    "agent-orchestrator",
-    "synthetic-data-architect",
-    "local-model-specialist",
-    "reviewer",
-    "verifier",
-    "security-reviewer",
-    "compliance-auditor",
-    "resilience-reviewer",
-    "accessibility-checker",
-    "ci-verifier",
-    "dependency-auditor",
-    "doc-writer",
-    "estimator",
-    "explorer",
-    "llm-evaluator",
-    "migration-planner",
-    "performance-profiler",
-    "runbook-writer",
-}
-
 
 class PermissionModeEnum(str, Enum):
     READ_ONLY = "read-only"
@@ -69,7 +43,6 @@ class DomainEnum(str, Enum):
     CLOUD_DEVOPS = "cloud-devops"
     FRONTEND_DESIGN = "frontend-design"
     AI_ML = "ai-ml"
-    AI_ML_ALT = "ai_ml"
 
 
 class ModelRouting(BaseModel):
@@ -82,9 +55,11 @@ class SubagentFrontmatter(BaseModel):
     name: str
     description: str
     tools: List[str] = Field(default_factory=list)
-    permission_mode: Optional[PermissionModeEnum] = None
-    domain: Optional[str] = None
+    permission_mode: Optional[PermissionModeEnum] = Field(default=PermissionModeEnum.WRITE_SCOPED)
+    domain: Optional[DomainEnum] = None
     model: Optional[Union[str, Dict[str, Any], ModelRouting]] = None
+    model_routing: Optional[ModelRouting] = None
+    api_version: Optional[str] = Field(default="1.0.0")
 
     @field_validator("tools", mode="before")
     @classmethod
@@ -107,11 +82,33 @@ class SubagentFrontmatter(BaseModel):
             return PermissionModeEnum.WRITE_SCOPED
         return None
 
+    @field_validator("domain", mode="before")
+    @classmethod
+    def parse_domain(cls, v: Any) -> Optional[DomainEnum]:
+        if not v:
+            return None
+        v_str = str(v).strip().lower().replace("_", "-")
+        for d in DomainEnum:
+            if d.value == v_str:
+                return d
+        return None
+
 
 class SkillFrontmatter(BaseModel):
     name: str
     description: str
-    domain: Optional[str] = None
+    domain: Optional[DomainEnum] = None
+
+    @field_validator("domain", mode="before")
+    @classmethod
+    def parse_domain(cls, v: Any) -> Optional[DomainEnum]:
+        if not v:
+            return None
+        v_str = str(v).strip().lower().replace("_", "-")
+        for d in DomainEnum:
+            if d.value == v_str:
+                return d
+        return None
 
 
 def extract_frontmatter_bounded(path: Path) -> Tuple[Optional[str], Optional[str]]:
@@ -234,16 +231,9 @@ def validate_file_rbac(path: Path, root: Path) -> List[Dict[str, Any]]:
 
         name = subagent_model.name or path.stem
         tools = subagent_model.tools
+        permission_mode = subagent_model.permission_mode
 
-        # Resolve effective permission mode
-        effective_permission = subagent_model.permission_mode
-        if effective_permission is None:
-            if name.lower() in READONLY_SUBAGENTS:
-                effective_permission = PermissionModeEnum.READ_ONLY
-            else:
-                effective_permission = PermissionModeEnum.WRITE_SCOPED
-
-        if effective_permission == PermissionModeEnum.READ_ONLY and tools:
+        if permission_mode == PermissionModeEnum.READ_ONLY and tools:
             declared_tools_lower = {tool.lower() for tool in tools}
             mutating = declared_tools_lower.intersection(MUTATING_TOOLS)
             if mutating:
@@ -278,7 +268,7 @@ def validate_rbac_schema(target_dir: Path) -> Tuple[List[Dict[str, Any]], int]:
         )
         return violations, 0
 
-    # Explicitly scan agents/*.md (excluding .gitkeep or non-subagent markdown files)
+    # Explicitly scan agents/*.md
     agents_dir = target_dir / "agents"
     if agents_dir.is_dir():
         for agent_file in sorted(agents_dir.glob("*.md")):
@@ -287,7 +277,7 @@ def validate_rbac_schema(target_dir: Path) -> Tuple[List[Dict[str, Any]], int]:
             scanned_count += 1
             violations.extend(validate_file_rbac(agent_file, target_dir))
 
-    # Explicitly scan skills/*/SKILL.md (ignoring general markdown docs like README.md or CHANGELOG.md)
+    # Explicitly scan skills/*/SKILL.md
     skills_dir = target_dir / "skills"
     if skills_dir.is_dir():
         for skill_file in sorted(skills_dir.glob("*/SKILL.md")):

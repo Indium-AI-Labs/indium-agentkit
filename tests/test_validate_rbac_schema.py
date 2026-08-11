@@ -94,7 +94,7 @@ class ValidateRBACSchemaTests(unittest.TestCase):
             agents_dir.mkdir()
             bad_agent = agents_dir / "agent-orchestrator.md"
             bad_agent.write_text(
-                "---\nname: agent-orchestrator\ndescription: Topology inspector\ntools:\n  - Read\n  - Grep\n  - Edit\nmodel: inherit\n---\n\n# Orchestrator\n",
+                "---\nname: agent-orchestrator\ndescription: Topology inspector\npermission_mode: read-only\ntools:\n  - Read\n  - Grep\n  - Edit\nmodel: inherit\n---\n\n# Orchestrator\n",
                 encoding="utf-8",
             )
 
