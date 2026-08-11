@@ -22,7 +22,7 @@ Before execution, inspect and populate the following context objects:
   "model_spec": {
     "model_id": "Qwen/Qwen2.5-Coder-7B-Instruct-GGUF",
     "param_count_b": 7.61,
-    "quant_type": "Q4_K_M",
+    "quant_type": "gguf | awq | gptq | fp16",
     "quant_bytes_per_param": 0.55,
     "context_length": 8192,
     "layers": 28,
@@ -64,16 +64,21 @@ Before execution, inspect and populate the following context objects:
    LOG_FILE="/tmp/indium_llm_${PORT}.log"
    ```
 
-2. Launch background daemon bound to `127.0.0.1:${PORT}`:
+2. Construct quantization parameters dynamically:
+   - If `quant_type` is `"fp16"`, set `QUANT_FLAG=""`.
+   - Otherwise, set `QUANT_FLAG="--quantization ${quant_type}"`.
+
+3. Launch background daemon bound to `127.0.0.1:${PORT}`:
    - **Path A: Enterprise CUDA Multi-User Server (vLLM)**:
      ```bash
-     # For GGUF Quantized Weights (inject --quantization gguf):
      vllm serve <model_id> \
        --port <port> \
        --host 127.0.0.1 \
-       --quantization gguf \
+       ${QUANT_FLAG} \
        --gpu-memory-utilization 0.85 \
-       --max-model-len <context_length> > "${LOG_FILE}" 2>&1 &
+       --max-model-len <context_length> \
+       --max-num-seqs <max_batch_size> \
+       --guided-decoding-backend outlines > "${LOG_FILE}" 2>&1 &
      echo $! > "${PID_FILE}"
      ```
    - **Path B: Edge / Desktop / Apple Silicon Metal (llama.cpp)**:
@@ -110,7 +115,7 @@ Before execution, inspect and populate the following context objects:
    ```bash
    TIMEOUT=60
    ELAPSED=0
-   until [ $(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:<port>/v1/models) -eq 200 ]; do
+   until [ "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:<port>/v1/models)" = "200" ]; do
      if [ $ELAPSED -ge $TIMEOUT ]; then
        echo "HEALTHCHECK_TIMEOUT"
        exit 1
@@ -137,7 +142,8 @@ If health checks time out, assertions fail, or CUDA OOM is detected in `${LOG_FI
    ```bash
    if [ -f "${PID_FILE}" ]; then
      TARGET_PID=$(cat "${PID_FILE}")
-     pkill -P "${TARGET_PID}" || kill -9 "${TARGET_PID}"
+     pkill -9 -P "${TARGET_PID}" 2>/dev/null
+     kill -9 "${TARGET_PID}" 2>/dev/null
      rm -f "${PID_FILE}"
    fi
    ```
