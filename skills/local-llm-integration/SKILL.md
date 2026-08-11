@@ -5,45 +5,126 @@ description: "Deploy, optimize, and serve quantized local LLMs using vLLM or Oll
 
 # Local LLM Integration
 
-Deploy, optimize, and serve quantized open-weight local LLMs (e.g., Llama, Qwen, DeepSeek) using production inference engines (vLLM, Ollama, llama.cpp). Enforce deterministic pre-flight VRAM bounds, OpenAI-compatible API bridging, constrained output decoding, and performance SLA validation.
+Deploy, optimize, and serve open-weight local LLMs (Llama, Qwen, DeepSeek) as a deterministic state machine using production serving engines (vLLM, Ollama, llama.cpp). Enforce strict I/O gatekeeping, mathematical pre-flight VRAM verification, exact CLI commands, OpenAI REST API bridging, constrained decoding, and TTFT SLA validation.
 
-## Workflow
+## Required I/O Context Schemas
 
-1. **Environment Pre-flight & VRAM Math**:
-   - Inspect target system hardware (total VRAM, unified RAM for Apple Silicon, CUDA compute capability).
-   - Calculate total memory requirement: `VRAM_Required = Model_Weights_GB + (2 * Layers * Heads * Head_Dim * Context_Len * Batch_Size * Precision_Bytes) + System_Buffer_GB`.
-   - **Fail-safe Abort**: If `VRAM_Required` exceeds `hardware_manifest` capacity, stop execution immediately, dump memory breakdown, and exit without launching processes.
+Before execution, inspect and populate the following context objects:
 
-2. **Inference Engine Selection**:
-   - **vLLM Engine (Enterprise / High-Throughput)**: Mandated for multi-user CUDA server deployments requiring PagedAttention, continuous batching, and high request concurrency (P99 latency < 100ms).
-   - **Ollama / llama.cpp Engine (Edge / Desktop / Apple Silicon)**: Selected for single-user pilots, workstation development, or Metal-accelerated unified memory architectures.
+```json
+{
+  "hardware_manifest": {
+    "platform": "cuda | metal | cpu",
+    "total_vram_mb": 24576,
+    "free_vram_mb": 22000,
+    "cuda_compute_capability": "8.9"
+  },
+  "model_spec": {
+    "model_id": "Qwen/Qwen2.5-Coder-7B-Instruct-GGUF",
+    "param_count_b": 7.61,
+    "quant_type": "Q4_K_M",
+    "context_length": 8192,
+    "layers": 28,
+    "heads": 28,
+    "head_dim": 128
+  }
+}
+```
 
-3. **Engine Memory & Runtime Bounds**:
-   - Set explicit GPU memory fraction (e.g., `gpu_memory_utilization=0.90` for vLLM).
-   - Clamp context window length (`max_model_len` / `n_ctx`) to prevent KV cache exhaustion during long generations.
-   - Enable tensor parallelism (`tensor_parallel_size`) across multi-GPU setups if model weight size exceeds single-GPU VRAM.
+## State Machine Execution Protocol
 
-4. **OpenAI-Compatible REST API Bridging**:
-   - Configure serving daemon to bind to local loopback (e.g., `http://localhost:8000/v1` or `http://localhost:11434/v1`).
-   - Standardize endpoint routing to expose `/v1/models` and `/v1/chat/completions`, enabling drop-in replacement for cloud API clients without codebase rewrites.
+### Step 1: Hardware Discovery & Deterministic VRAM Proof
 
-5. **Constrained Decoding & Sampler Protection**:
-   - Enforce GBNF (GGML Backus-Naur Form) or JSON Schema grammars directly at the engine sampler level for structured outputs.
-   - Configure decoding safety limits (temperature, top_p, repetition penalty, max tokens) to prevent infinite token loops and hallucination cascades.
+1. Run exact CLI discovery command based on host architecture:
+   - **Linux CUDA**: `nvidia-smi --query-gpu=memory.total,memory.free --format=csv,noheader,nounits`
+   - **macOS Metal**: `sysctl -n hw.memsize`
+   - **Linux CPU/RAM Fallback**: `free -m`
 
-6. **Validation Invariants & SLA Verification**:
-   - Execute HTTP health check against `/v1/models` (must return HTTP 200).
-   - Run synthetic test prompt to measure Time-To-First-Token (TTFT < 200ms SLA) and output schema conformance.
+2. Compute deterministic VRAM consumption:
+   - `Weight_RAM_MB = (param_count_b * quant_bytes_per_param * 1024)` (e.g. Q4_K_M = 0.55 bytes/param -> 7.61 * 0.55 * 1024 = 4286 MB)
+   - `KV_Cache_MB = (2 * layers * heads * head_dim * context_length * batch_size * precision_bytes) / (1024 * 1024)` (Precision = 2 for FP16)
+   - `Total_Required_MB = Weight_RAM_MB + KV_Cache_MB + 2048` (System safety buffer = 2048 MB)
 
-7. **Atomic Fail-Safe & Rollback Handling**:
-   - If port binding fails or startup triggers CUDA OOM errors, capture diagnostic logs, terminate all spawned background daemons, and restore pre-execution system configurations.
+3. **Pre-flight Gate Assertion**:
+   - Evaluate `Total_Required_MB <= free_vram_mb`.
+   - **If assertion fails**: Immediately abort execution, emit JSON error `{"status": "OOM_PREFLIGHT_FAIL", "required_mb": Total_Required_MB, "available_mb": free_vram_mb}`, and exit without spawning processes.
+
+### Step 2: Engine Selection & Daemon Launch
+
+1. Select execution binary based on hardware and concurrency targets:
+   - **Path A: Enterprise CUDA Multi-User Server (vLLM)**:
+     ```bash
+     vllm serve <model_id> \
+       --port 8000 \
+       --host 127.0.0.1 \
+       --gpu-memory-utilization 0.90 \
+       --max-model-len <context_length> \
+       --dtype float16 > /tmp/vllm_daemon.log 2>&1 &
+     ```
+   - **Path B: Edge / Desktop / Apple Silicon Metal (Ollama or llama.cpp)**:
+     ```bash
+     llama-server \
+       -m <gguf_path> \
+       -c <context_length> \
+       --port 11434 \
+       --host 127.0.0.1 > /tmp/llama_daemon.log 2>&1 &
+     ```
+
+2. Capture process PID: `echo $! > /tmp/local_llm_daemon.pid`
+
+### Step 3: OpenAI API Bridging & Constrained Decoding Setup
+
+1. Verify loopback API listener binding: `http://127.0.0.1:8000/v1` or `http://127.0.0.1:11434/v1`.
+2. Configure sampler constraints in request templates to eliminate token repetition loops:
+   ```json
+   {
+     "model": "<model_id>",
+     "temperature": 0.2,
+     "top_p": 0.9,
+     "repetition_penalty": 1.1,
+     "max_tokens": 2048,
+     "response_format": {
+       "type": "json_object"
+     }
+   }
+   ```
+
+### Step 4: Validation Invariants & TTFT SLA Testing
+
+1. **HTTP Health Check**:
+   ```bash
+   curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8000/v1/models
+   ```
+   Assert returned status code equals `200`.
+
+2. **TTFT SLA Benchmark**:
+   ```bash
+   curl -s -w "\nTTFT: %{time_starttransfer}s\nTOTAL: %{time_total}s\nHTTP: %{http_code}\n" \
+     -X POST http://127.0.0.1:8000/v1/chat/completions \
+     -H "Content-Type: application/json" \
+     -d '{"model": "<model_id>", "messages": [{"role": "user", "content": "ping"}], "max_tokens": 10}'
+   ```
+   Assert `time_starttransfer < 0.200` (Time-To-First-Token < 200ms SLA) and HTTP status == `200`.
+
+### Step 5: Atomic Failure Recovery & Rollback Handler
+
+If any verification assertion fails or CUDA OOM is detected in `/tmp/vllm_daemon.log`:
+1. Read diagnostic tail: `tail -n 50 /tmp/vllm_daemon.log`
+2. Terminate daemon process:
+   ```bash
+   if [ -f /tmp/local_llm_daemon.pid ]; then kill -9 $(cat /tmp/local_llm_daemon.pid); fi
+   pkill -9 -f "vllm" || pkill -9 -f "llama-server"
+   ```
+3. Remove temporary PID files: `rm -f /tmp/local_llm_daemon.pid`
+4. Return structured error summary to the orchestrator.
 
 ## Guardrails
 
-- Never bypass VRAM pre-flight calculations or attempt unbuffered model loading.
-- Do not expose local model endpoints beyond loopback (`127.0.0.1`) without explicit mTLS or RBAC authentication.
-- An optional `local-model-specialist` subagent can assist with GGUF quantization selection or KV cache tuning, but single-agent execution must complete all workflow steps.
+- Never execute model loading without verifying the deterministic VRAM math proof.
+- Do not bind serving endpoints to external interfaces (`0.0.0.0`) without explicit auth proxies.
+- Frontmatter must contain strictly `name` and `description` fields to preserve distribution compatibility.
+- An optional `local-model-specialist` subagent may assist with quantization choice, but single-agent execution must execute all steps end-to-end.
 
 ## Completion Report
 
-Report target hardware manifest, engine selected (vLLM vs Ollama), model parameters & quantization level, VRAM headroom, loopback API endpoint, TTFT SLA test results, and schema adherence verification.
+Report `hardware_manifest` metrics, `model_spec` parameters, computed `Total_Required_MB` vs `free_vram_mb`, launched daemon PID, active loopback endpoint URL, HTTP health status, measured TTFT SLA timing, and structured JSON output validation proof.
