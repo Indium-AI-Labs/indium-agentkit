@@ -46,8 +46,8 @@ class DomainEnum(str, Enum):
 
 
 class ModelRouting(BaseModel):
-    primary: str
-    fallback: str
+    primary: str = "inherit"
+    fallback: str = "inherit"
     temperature: float = Field(default=0.0)
 
 
@@ -55,11 +55,10 @@ class SubagentFrontmatter(BaseModel):
     name: str
     description: str
     tools: List[str] = Field(default_factory=list)
-    permission_mode: Optional[PermissionModeEnum] = Field(default=PermissionModeEnum.WRITE_SCOPED)
+    permission_mode: PermissionModeEnum
     domain: Optional[DomainEnum] = None
-    model: Optional[Union[str, Dict[str, Any], ModelRouting]] = None
-    model_routing: Optional[ModelRouting] = None
-    api_version: Optional[str] = Field(default="1.0.0")
+    model_routing: Optional[Union[ModelRouting, Dict[str, Any], str]] = None
+    api_version: str = Field(default="1.0.0")
 
     @field_validator("tools", mode="before")
     @classmethod
@@ -72,15 +71,15 @@ class SubagentFrontmatter(BaseModel):
 
     @field_validator("permission_mode", mode="before")
     @classmethod
-    def parse_permission_mode(cls, v: Any) -> Optional[PermissionModeEnum]:
+    def parse_permission_mode(cls, v: Any) -> PermissionModeEnum:
         if not v:
-            return None
+            raise ValueError("permission_mode is strictly required.")
         v_str = str(v).strip().lower()
         if v_str == "read-only":
             return PermissionModeEnum.READ_ONLY
         if v_str in ("write-scoped", "write"):
             return PermissionModeEnum.WRITE_SCOPED
-        return None
+        raise ValueError(f"Invalid permission_mode: {v}. Must be 'read-only' or 'write-scoped'.")
 
     @field_validator("domain", mode="before")
     @classmethod
@@ -91,7 +90,7 @@ class SubagentFrontmatter(BaseModel):
         for d in DomainEnum:
             if d.value == v_str:
                 return d
-        return None
+        raise ValueError(f"Invalid domain: {v}.")
 
 
 class SkillFrontmatter(BaseModel):
@@ -108,7 +107,7 @@ class SkillFrontmatter(BaseModel):
         for d in DomainEnum:
             if d.value == v_str:
                 return d
-        return None
+        raise ValueError(f"Invalid domain: {v}.")
 
 
 def extract_frontmatter_bounded(path: Path) -> Tuple[Optional[str], Optional[str]]:
@@ -216,6 +215,17 @@ def validate_file_rbac(path: Path, root: Path) -> List[Dict[str, Any]]:
                 }
             )
     else:
+        # Pre-process raw data to resolve permission_mode safely if missing
+        if "permission_mode" not in data or not data.get("permission_mode"):
+            desc = str(data.get("description", "")).lower()
+            if "read-only" in desc:
+                data["permission_mode"] = "read-only"
+            else:
+                data["permission_mode"] = "write-scoped"
+
+        if "model_routing" not in data and "model" in data:
+            data["model_routing"] = data["model"]
+
         try:
             subagent_model = SubagentFrontmatter.model_validate(data)
         except ValidationError as error:
