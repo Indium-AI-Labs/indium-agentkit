@@ -6,18 +6,16 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, List, Tuple
 
 import yaml
-from pydantic import BaseModel, Field, ValidationError, field_validator
-
+from pydantic import BaseModel, Field, ValidationError
 
 FRONTMATTER_DELIMITER = "---"
 MAX_FRONTMATTER_LINES = 100
 
-MUTATING_TOOLS: Set[str] = {
+MUTATING_TOOLS: frozenset[str] = frozenset({
     "edit",
     "write",
     "patch",
@@ -29,88 +27,28 @@ MUTATING_TOOLS: Set[str] = {
     "scaffold",
     "scaffold_content",
     "write_to_file",
-}
-
-
-class PermissionModeEnum(str, Enum):
-    READ_ONLY = "read-only"
-    WRITE_SCOPED = "write-scoped"
-
-
-class DomainEnum(str, Enum):
-    CORE_ENGINEERING = "core-engineering"
-    SECURITY_COMPLIANCE = "security-compliance"
-    CLOUD_DEVOPS = "cloud-devops"
-    FRONTEND_DESIGN = "frontend-design"
-    AI_ML = "ai-ml"
-
+})
 
 class ModelRouting(BaseModel):
-    primary: str = "inherit"
-    fallback: str = "inherit"
+    primary: str
+    fallback: str
     temperature: float = Field(default=0.0)
-
 
 class SubagentFrontmatter(BaseModel):
     name: str
     description: str
-    tools: List[str] = Field(default_factory=list)
-    permission_mode: PermissionModeEnum
-    domain: Optional[DomainEnum] = None
-    model_routing: Optional[Union[ModelRouting, Dict[str, Any], str]] = None
-    api_version: str = Field(default="1.0.0")
-
-    @field_validator("tools", mode="before")
-    @classmethod
-    def parse_tools_field(cls, v: Any) -> List[str]:
-        if isinstance(v, str):
-            return [tool.strip() for tool in v.replace(";", ",").split(",") if tool.strip()]
-        if isinstance(v, list):
-            return [str(tool).strip() for tool in v if str(tool).strip()]
-        return []
-
-    @field_validator("permission_mode", mode="before")
-    @classmethod
-    def parse_permission_mode(cls, v: Any) -> PermissionModeEnum:
-        if not v:
-            raise ValueError("permission_mode is strictly required.")
-        v_str = str(v).strip().lower()
-        if v_str == "read-only":
-            return PermissionModeEnum.READ_ONLY
-        if v_str in ("write-scoped", "write"):
-            return PermissionModeEnum.WRITE_SCOPED
-        raise ValueError(f"Invalid permission_mode: {v}. Must be 'read-only' or 'write-scoped'.")
-
-    @field_validator("domain", mode="before")
-    @classmethod
-    def parse_domain(cls, v: Any) -> Optional[DomainEnum]:
-        if not v:
-            return None
-        v_str = str(v).strip().lower().replace("_", "-")
-        for d in DomainEnum:
-            if d.value == v_str:
-                return d
-        raise ValueError(f"Invalid domain: {v}.")
-
+    domain: str = Field(pattern=r"^(core-engineering|security-compliance|cloud-devops|frontend-design|ai-ml)$")
+    permission_mode: str = Field(pattern=r"^(read-only|write-scoped)$")
+    tools: List[str]
+    model_routing: ModelRouting
+    api_version: str
 
 class SkillFrontmatter(BaseModel):
     name: str
     description: str
-    domain: Optional[DomainEnum] = None
+    domain: str | None = Field(default=None, pattern=r"^(core-engineering|security-compliance|cloud-devops|frontend-design|ai-ml)$")
 
-    @field_validator("domain", mode="before")
-    @classmethod
-    def parse_domain(cls, v: Any) -> Optional[DomainEnum]:
-        if not v:
-            return None
-        v_str = str(v).strip().lower().replace("_", "-")
-        for d in DomainEnum:
-            if d.value == v_str:
-                return d
-        raise ValueError(f"Invalid domain: {v}.")
-
-
-def extract_frontmatter_bounded(path: Path) -> Tuple[Optional[str], Optional[str]]:
+def extract_frontmatter_bounded(path: Path) -> Tuple[str | None, str | None]:
     """Extract frontmatter string using bounded line-reading to avoid reading entire file into memory."""
     lines: List[str] = []
     found_opening = False
@@ -127,7 +65,7 @@ def extract_frontmatter_bounded(path: Path) -> Tuple[Optional[str], Optional[str
                         found_opening = True
                         continue
                     else:
-                        return None, "missing opening YAML frontmatter delimiter"
+                        return None, f"missing opening YAML frontmatter delimiter '{FRONTMATTER_DELIMITER}'"
 
                 if stripped == FRONTMATTER_DELIMITER:
                     found_closing = True
@@ -136,201 +74,143 @@ def extract_frontmatter_bounded(path: Path) -> Tuple[Optional[str], Optional[str
     except OSError as error:
         return None, f"file I/O failure: {error}"
 
-    if not found_opening:
-        return None, "missing opening YAML frontmatter delimiter"
-    if not found_closing:
-        return None, "missing closing YAML frontmatter delimiter"
+    if not found_opening or not found_closing:
+        return None, "malformed or missing YAML frontmatter delimiters"
 
     return "".join(lines), None
 
-
 def validate_file_rbac(path: Path, root: Path) -> List[Dict[str, Any]]:
     violations: List[Dict[str, Any]] = []
+    
     try:
         relative_path = path.relative_to(root)
-        rel_path = str(relative_path)
+        rel_path_str = str(relative_path)
     except ValueError:
-        rel_path = str(path)
+        rel_path_str = str(path)
         relative_path = path
 
     raw_yaml, extract_error = extract_frontmatter_bounded(path)
-    if extract_error:
-        violations.append(
-            {
-                "level": "ERROR",
-                "error_type": "SchemaValidationError",
-                "file": rel_path,
-                "message": extract_error,
-            }
-        )
+    if extract_error or raw_yaml is None:
+        violations.append({
+            "level": "ERROR",
+            "error_type": "SchemaValidationError",
+            "file": rel_path_str,
+            "message": extract_error or "Unknown extraction error",
+        })
         return violations
 
     try:
-        data = yaml.safe_load(raw_yaml)
-        if not isinstance(data, dict):
-            violations.append(
-                {
-                    "level": "ERROR",
-                    "error_type": "SchemaValidationError",
-                    "file": rel_path,
-                    "message": "frontmatter YAML did not parse into a dictionary mapping",
-                }
-            )
-            return violations
-    except yaml.YAMLError as error:
-        violations.append(
-            {
-                "level": "ERROR",
-                "error_type": "YAMLError",
-                "file": rel_path,
-                "message": f"malformed YAML frontmatter syntax: {error}",
-            }
-        )
-        return violations
-
-    root_dir = relative_path.parts[0] if relative_path.parts else ""
-    is_skill = (root_dir == "skills") or path.name == "SKILL.md"
-
-    if is_skill:
-        try:
-            skill_model = SkillFrontmatter.model_validate(data)
-        except ValidationError as error:
-            violations.append(
-                {
-                    "level": "ERROR",
-                    "error_type": "SchemaValidationError",
-                    "file": rel_path,
-                    "message": f"Skill schema validation failure: {error.errors()}",
-                }
-            )
-            return violations
-
-        if skill_model.name != path.parent.name:
-            violations.append(
-                {
-                    "level": "ERROR",
-                    "error_type": "SchemaValidationError",
-                    "file": rel_path,
-                    "message": f"Skill frontmatter name '{skill_model.name}' must match directory name '{path.parent.name}'",
-                }
-            )
-    else:
-        # Pre-process raw data to resolve permission_mode safely if missing
-        if "permission_mode" not in data or not data.get("permission_mode"):
-            desc = str(data.get("description", "")).lower()
-            if "read-only" in desc:
-                data["permission_mode"] = "read-only"
-            else:
-                data["permission_mode"] = "write-scoped"
-
-        if "model_routing" not in data and "model" in data:
-            data["model_routing"] = data["model"]
-
-        try:
-            subagent_model = SubagentFrontmatter.model_validate(data)
-        except ValidationError as error:
-            violations.append(
-                {
-                    "level": "ERROR",
-                    "error_type": "SchemaValidationError",
-                    "file": rel_path,
-                    "message": f"Subagent schema validation failure: {error.errors()}",
-                }
-            )
-            return violations
-
-        name = subagent_model.name or path.stem
-        tools = subagent_model.tools
-        permission_mode = subagent_model.permission_mode
-
-        if permission_mode == PermissionModeEnum.READ_ONLY and tools:
-            declared_tools_lower = {tool.lower() for tool in tools}
-            mutating = declared_tools_lower.intersection(MUTATING_TOOLS)
-            if mutating:
-                prohibited_sorted = sorted(list(mutating))
-                violations.append(
-                    {
-                        "level": "ERROR",
+        raw_dict = yaml.safe_load(raw_yaml)
+        if not isinstance(raw_dict, dict):
+            raise ValueError("YAML frontmatter must map to a dictionary.")
+            
+        root_dir = relative_path.parts[0] if relative_path.parts else ""
+            
+        if root_dir == "agents":
+            manifest = SubagentFrontmatter.model_validate(raw_dict)
+            
+            if manifest.permission_mode == "read-only":
+                declared_tools_lower = {tool.lower() for tool in manifest.tools}
+                mutating = declared_tools_lower.intersection(MUTATING_TOOLS)
+                
+                if mutating:
+                    prohibited_sorted = sorted(list(mutating))
+                    violations.append({
+                        "level": "CRITICAL",
                         "error_type": "PrivilegeEscalationError",
-                        "file": rel_path,
-                        "entity": name,
+                        "file": rel_path_str,
+                        "entity": manifest.name,
                         "prohibited_tools": prohibited_sorted,
-                        "declared_tools": tools,
-                        "message": f"Read-only entity '{name}' declared mutating tools: {', '.join(prohibited_sorted)}",
-                    }
-                )
+                        "declared_tools": manifest.tools,
+                        "message": f"Read-only entity '{manifest.name}' declared mutating tools: {', '.join(prohibited_sorted)}",
+                    })
+
+        elif root_dir == "skills" or path.name == "SKILL.md":
+            skill_manifest = SkillFrontmatter.model_validate(raw_dict)
+            if skill_manifest.name != path.parent.name and path.name == "SKILL.md":
+                violations.append({
+                    "level": "ERROR",
+                    "error_type": "SchemaValidationError",
+                    "file": rel_path_str,
+                    "message": f"Skill name '{skill_manifest.name}' must match directory name '{path.parent.name}'.",
+                })
+
+    except ValidationError as e:
+        violations.append({
+            "level": "ERROR",
+            "error_type": "SchemaValidationError",
+            "file": rel_path_str,
+            "message": f"Pydantic schema failure: {e.errors()}",
+        })
+    except (OSError, ValueError, yaml.YAMLError) as e:
+        violations.append({
+            "level": "ERROR",
+            "error_type": "ParseError",
+            "file": rel_path_str,
+            "message": str(e),
+        })
 
     return violations
 
-
-def validate_rbac_schema(target_dir: Path) -> Tuple[List[Dict[str, Any]], int]:
+def validate_catalog(target_dir: Path) -> Tuple[List[Dict[str, Any]], int]:
     violations: List[Dict[str, Any]] = []
     scanned_count = 0
 
     if not target_dir.exists() or not target_dir.is_dir():
-        violations.append(
-            {
-                "level": "ERROR",
-                "error_type": "SchemaValidationError",
-                "file": str(target_dir),
-                "message": f"target directory does not exist or is not a directory: {target_dir}",
-            }
-        )
+        violations.append({
+            "level": "ERROR",
+            "error_type": "DirectoryResolutionError",
+            "file": str(target_dir),
+            "message": "Target directory does not exist or is inaccessible.",
+        })
         return violations, 0
 
-    # Explicitly scan agents/*.md
+    target_files: List[Path] = []
+    
     agents_dir = target_dir / "agents"
     if agents_dir.is_dir():
-        for agent_file in sorted(agents_dir.glob("*.md")):
-            if agent_file.name.startswith("."):
-                continue
-            scanned_count += 1
-            violations.extend(validate_file_rbac(agent_file, target_dir))
+        target_files.extend([f for f in agents_dir.glob("*.md") if not f.name.startswith(".")])
 
-    # Explicitly scan skills/*/SKILL.md
     skills_dir = target_dir / "skills"
     if skills_dir.is_dir():
-        for skill_file in sorted(skills_dir.glob("*/SKILL.md")):
-            scanned_count += 1
-            violations.extend(validate_file_rbac(skill_file, target_dir))
+        target_files.extend(skills_dir.glob("*/SKILL.md"))
+
+    for target_file in sorted(target_files):
+        scanned_count += 1
+        violations.extend(validate_file_rbac(target_file, target_dir))
 
     return violations, scanned_count
 
+def validate_rbac_schema(target_dir: Path) -> Tuple[List[Dict[str, Any]], int]:
+    """Helper alias for backwards compatibility."""
+    return validate_catalog(target_dir)
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Validate RBAC schema and tool privilege limits across the catalog.")
+    parser = argparse.ArgumentParser(description="Enforce strict RBAC schema limits across indium-agentkit.")
     parser.add_argument(
         "--target-dir",
         type=Path,
         default=Path(__file__).resolve().parent.parent,
-        help="Target directory to scan (default: repository root)",
-    )
-    parser.add_argument(
-        "--json-output",
-        action="store_true",
-        help="Emit structured NDJSON output format to stdout/stderr",
+        help="Absolute path to the target repository catalog.",
     )
     args = parser.parse_args()
 
-    target_dir = args.target_dir.expanduser().resolve()
-    violations, scanned_count = validate_rbac_schema(target_dir)
+    target_dir = args.target_dir.resolve()
+    violations, scanned_count = validate_catalog(target_dir)
 
     if violations:
         for violation in violations:
-            log_line = json.dumps(violation)
-            print(log_line, file=sys.stderr)
+            print(json.dumps(violation), file=sys.stderr)
         return 1
 
-    summary = {
+    print(json.dumps({
         "level": "INFO",
         "status": "PASSED",
         "scanned_files": scanned_count,
         "violations": 0,
-        "message": f"RBAC schema validation passed cleanly across {scanned_count} catalog entities.",
-    }
-    print(json.dumps(summary), file=sys.stdout)
+        "message": f"RBAC schema validation passed cleanly across {scanned_count} catalog entities."
+    }), file=sys.stdout)
     return 0
 
-
 if __name__ == "__main__":
-    raise SystemExit(main())
+    sys.exit(main())
