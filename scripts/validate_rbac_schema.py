@@ -111,6 +111,7 @@ class SubagentFrontmatter(BaseModel):
 class SkillFrontmatter(BaseModel):
     name: str
     description: str
+    domain: Optional[str] = None
 
 
 def extract_frontmatter_bounded(path: Path) -> Tuple[Optional[str], Optional[str]]:
@@ -271,14 +272,16 @@ def validate_rbac_schema(target_dir: Path) -> Tuple[List[Dict[str, Any]], int]:
         )
         return violations, 0
 
-    # Scan agents/*.md
+    # Explicitly scan agents/*.md (excluding .gitkeep or non-subagent markdown files)
     agents_dir = target_dir / "agents"
     if agents_dir.is_dir():
         for agent_file in sorted(agents_dir.glob("*.md")):
+            if agent_file.name.startswith("."):
+                continue
             scanned_count += 1
             violations.extend(validate_file_rbac(agent_file, target_dir))
 
-    # Scan skills/*/SKILL.md
+    # Explicitly scan skills/*/SKILL.md (ignoring general markdown docs like README.md or CHANGELOG.md)
     skills_dir = target_dir / "skills"
     if skills_dir.is_dir():
         for skill_file in sorted(skills_dir.glob("*/SKILL.md")):
