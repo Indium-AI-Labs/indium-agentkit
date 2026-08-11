@@ -27,7 +27,7 @@ python scripts/list_content.py --format markdown
 | skill | `infrastructure-review` | Review infrastructure for security, reliability, and cost risks. |
 | skill | `llm-eval-harness` | Design and execute evaluation benchmarks for prompts, RAG retrieval pipelines, and agent tools to measure token cost, latency, accuracy, and guardrail compliance. |
 | skill | `load-testing-suite` | Design, configure, and execute load and stress testing suites (k6, Locust) with target latency SLAs, throughput targets, and tear-down verification. |
-| skill | `local-llm-integration` | Deploy, optimize, and serve quantized local LLMs using vLLM or Ollama runtimes. Use when a project requires on-premise inference, zero data egress, offline air-gapped security, or predictable local inference performance. |
+| skill | `local-llm-integration` | Deploy, optimize, and serve quantized open-weight local LLMs (vLLM/Ollama/llama.cpp) with GQA-aware VRAM pre-flight validation, process-scoped cleanup, and healthcheck polling. |
 | skill | `mobile-release-safety` | Plan and audit mobile application releases (iOS/Android/React Native/Flutter) covering app store submission requirements, code signing, feature flags, OTA updates, and crash reporting. |
 | skill | `observability-setup` | Instrument code with structured logging, metrics, distributed tracing, or alerting following existing observability patterns and avoiding credential exposure. |
 | skill | `onboard-to-codebase` | Generate a developer onboarding guide or codebase orientation by analyzing architecture, conventions, dependencies, workflows, and common tasks from the existing project. |
