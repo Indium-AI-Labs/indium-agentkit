@@ -150,7 +150,12 @@ def extract_frontmatter_bounded(path: Path) -> Tuple[Optional[str], Optional[str
 
 def validate_file_rbac(path: Path, root: Path) -> List[Dict[str, Any]]:
     violations: List[Dict[str, Any]] = []
-    rel_path = str(path.relative_to(root)) if root in path.parents or path == root else str(path)
+    try:
+        relative_path = path.relative_to(root)
+        rel_path = str(relative_path)
+    except ValueError:
+        rel_path = str(path)
+        relative_path = path
 
     raw_yaml, extract_error = extract_frontmatter_bounded(path)
     if extract_error:
@@ -187,7 +192,8 @@ def validate_file_rbac(path: Path, root: Path) -> List[Dict[str, Any]]:
         )
         return violations
 
-    is_skill = "skills" in path.parts or path.name == "SKILL.md"
+    root_dir = relative_path.parts[0] if relative_path.parts else ""
+    is_skill = (root_dir == "skills") or path.name == "SKILL.md"
 
     if is_skill:
         try:
