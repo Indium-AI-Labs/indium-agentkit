@@ -38,6 +38,37 @@ class ValidateRBACSchemaTests(unittest.TestCase):
         finally:
             temp_path.unlink(missing_ok=True)
 
+    def test_skill_schema_routing(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            skill_dir = temp_path / "skills" / "demo-skill"
+            skill_dir.mkdir(parents=True)
+            skill_file = skill_dir / "SKILL.md"
+            skill_file.write_text(
+                "---\nname: demo-skill\ndescription: A demo skill for testing.\n---\n\n# Demo Skill\n",
+                encoding="utf-8",
+            )
+
+            violations, scanned = validate_rbac_schema(temp_path)
+            self.assertEqual(scanned, 1)
+            self.assertEqual(violations, [])
+
+    def test_skill_directory_mismatch_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            skill_dir = temp_path / "skills" / "demo-skill"
+            skill_dir.mkdir(parents=True)
+            skill_file = skill_dir / "SKILL.md"
+            skill_file.write_text(
+                "---\nname: mismatched-name\ndescription: Mismatched skill name.\n---\n\n# Mismatched\n",
+                encoding="utf-8",
+            )
+
+            violations, scanned = validate_rbac_schema(temp_path)
+            self.assertEqual(scanned, 1)
+            self.assertEqual(len(violations), 1)
+            self.assertIn("must match directory name", violations[0]["message"])
+
     def test_readonly_agent_with_write_tool_fails(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)

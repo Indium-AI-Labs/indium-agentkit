@@ -72,13 +72,19 @@ class DomainEnum(str, Enum):
     AI_ML_ALT = "ai_ml"
 
 
+class ModelRouting(BaseModel):
+    primary: str
+    fallback: str
+    temperature: float = Field(default=0.0)
+
+
 class SubagentFrontmatter(BaseModel):
     name: str
     description: str
     tools: List[str] = Field(default_factory=list)
     permission_mode: Optional[PermissionModeEnum] = None
     domain: Optional[str] = None
-    model: Optional[Union[str, Dict[str, Any]]] = None
+    model: Optional[Union[str, Dict[str, Any], ModelRouting]] = None
 
     @field_validator("tools", mode="before")
     @classmethod
@@ -100,6 +106,11 @@ class SubagentFrontmatter(BaseModel):
         if v_str in ("write-scoped", "write"):
             return PermissionModeEnum.WRITE_SCOPED
         return None
+
+
+class SkillFrontmatter(BaseModel):
+    name: str
+    description: str
 
 
 def extract_frontmatter_bounded(path: Path) -> Tuple[Optional[str], Optional[str]]:
@@ -175,46 +186,72 @@ def validate_file_rbac(path: Path, root: Path) -> List[Dict[str, Any]]:
         )
         return violations
 
-    try:
-        model_data = SubagentFrontmatter.model_validate(data)
-    except ValidationError as error:
-        violations.append(
-            {
-                "level": "ERROR",
-                "error_type": "SchemaValidationError",
-                "file": rel_path,
-                "message": f"Pydantic schema validation failure: {error.errors()}",
-            }
-        )
-        return violations
+    is_skill = "skills" in path.parts or path.name == "SKILL.md"
 
-    name = model_data.name or path.stem
-    tools = model_data.tools
-
-    # Resolve effective permission mode
-    effective_permission = model_data.permission_mode
-    if effective_permission is None:
-        if name.lower() in READONLY_SUBAGENTS:
-            effective_permission = PermissionModeEnum.READ_ONLY
-        else:
-            effective_permission = PermissionModeEnum.WRITE_SCOPED
-
-    if effective_permission == PermissionModeEnum.READ_ONLY and tools:
-        declared_tools_lower = {tool.lower() for tool in tools}
-        mutating = declared_tools_lower.intersection(MUTATING_TOOLS)
-        if mutating:
-            prohibited_sorted = sorted(list(mutating))
+    if is_skill:
+        try:
+            skill_model = SkillFrontmatter.model_validate(data)
+        except ValidationError as error:
             violations.append(
                 {
                     "level": "ERROR",
-                    "error_type": "PrivilegeEscalationError",
+                    "error_type": "SchemaValidationError",
                     "file": rel_path,
-                    "entity": name,
-                    "prohibited_tools": prohibited_sorted,
-                    "declared_tools": tools,
-                    "message": f"Read-only entity '{name}' declared mutating tools: {', '.join(prohibited_sorted)}",
+                    "message": f"Skill schema validation failure: {error.errors()}",
                 }
             )
+            return violations
+
+        if skill_model.name != path.parent.name:
+            violations.append(
+                {
+                    "level": "ERROR",
+                    "error_type": "SchemaValidationError",
+                    "file": rel_path,
+                    "message": f"Skill frontmatter name '{skill_model.name}' must match directory name '{path.parent.name}'",
+                }
+            )
+    else:
+        try:
+            subagent_model = SubagentFrontmatter.model_validate(data)
+        except ValidationError as error:
+            violations.append(
+                {
+                    "level": "ERROR",
+                    "error_type": "SchemaValidationError",
+                    "file": rel_path,
+                    "message": f"Subagent schema validation failure: {error.errors()}",
+                }
+            )
+            return violations
+
+        name = subagent_model.name or path.stem
+        tools = subagent_model.tools
+
+        # Resolve effective permission mode
+        effective_permission = subagent_model.permission_mode
+        if effective_permission is None:
+            if name.lower() in READONLY_SUBAGENTS:
+                effective_permission = PermissionModeEnum.READ_ONLY
+            else:
+                effective_permission = PermissionModeEnum.WRITE_SCOPED
+
+        if effective_permission == PermissionModeEnum.READ_ONLY and tools:
+            declared_tools_lower = {tool.lower() for tool in tools}
+            mutating = declared_tools_lower.intersection(MUTATING_TOOLS)
+            if mutating:
+                prohibited_sorted = sorted(list(mutating))
+                violations.append(
+                    {
+                        "level": "ERROR",
+                        "error_type": "PrivilegeEscalationError",
+                        "file": rel_path,
+                        "entity": name,
+                        "prohibited_tools": prohibited_sorted,
+                        "declared_tools": tools,
+                        "message": f"Read-only entity '{name}' declared mutating tools: {', '.join(prohibited_sorted)}",
+                    }
+                )
 
     return violations
 
