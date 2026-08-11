@@ -39,6 +39,31 @@ Before execution, inspect and populate the following context objects:
 }
 ```
 
+### Context Field Reference & Dependency Matrix
+
+#### 1. `hardware_manifest` (Environment-Dependent)
+- `platform` *(Environment)*: Hardware acceleration target (`cuda` for NVIDIA GPUs, `metal` for Apple Silicon unified memory, `cpu` for host RAM fallback).
+- `total_vram_mb` *(Environment)*: Total installed GPU VRAM or Apple Silicon unified memory capacity in megabytes (e.g. `24576` for 24 GB).
+- `free_vram_mb` *(Environment)*: Currently unallocated VRAM headroom in megabytes prior to model initialization (discovered via CLI discovery commands).
+- `cuda_compute_capability` *(Environment)*: NVIDIA GPU architecture compute version (e.g. `"8.9"` for RTX 4090/Ada Lovelace, `"8.0"` for A100) determining flash attention and kernel capabilities.
+
+#### 2. `model_spec` (Model-Dependent)
+- `model_id` *(Model)*: Canonical HuggingFace repository identifier or local model name (e.g. `"Qwen/Qwen2.5-Coder-7B-Instruct-GGUF"`).
+- `local_model_path` *(Model)*: Absolute file path to localized weight binary (e.g. `"/mnt/models/Qwen2.5-Coder-7B-Instruct-Q4_K_M.gguf"`), required for `llama-server` execution.
+- `param_count_b` *(Model)*: Total parameter count in billions (e.g. `7.61` for 7B models, `70.0` for 70B models), driving base weight VRAM calculations.
+- `quant_type` *(Model)*: Quantization format (`gguf`, `awq`, `gptq`, or `fp16`) controlling engine startup CLI flags (`--quantization`).
+- `quant_bytes_per_param` *(Model)*: Average byte weight per parameter (e.g. `0.55` for `Q4_K_M`, `0.65` for `Q5_K_M`, `2.0` for `FP16`), used in $VRAM_{weights\_mb}$ math.
+- `context_length` *(Model/Environment)*: Target sequence window token length (e.g. `8192`), scaling KV cache memory allocation.
+- `layers` *(Model)*: Total transformer layer count (e.g. `28` for Qwen 2.5 7B, `32` for Llama 3 8B).
+- `kv_heads` *(Model)*: Key-Value attention head count for Grouped-Query Attention (GQA) / Multi-Query Attention (MQA) (e.g. `8` for Llama 3 8B), preventing $4\times$ KV cache overestimation.
+- `head_dim` *(Model)*: Dimensionality per attention head (e.g. `128`), used in GQA KV cache calculations.
+
+#### 3. `deployment_config` (Environment & Model Dependent)
+- `engine` *(Environment/Model)*: Target serving runtime (`vLLM` for high-concurrency CUDA servers, `llama.cpp` for edge/desktop/Metal).
+- `port` *(Environment)*: Local loopback TCP port for REST binding and process-scoped logging/PID management (e.g. `8000`).
+- `max_batch_size` *(Environment/Model)*: Bounded sequence batch ceiling (e.g. `4`), passed to `--max-num-seqs` / `-np` to constrain KV cache block pre-allocation.
+- `precision_bytes` *(Model)*: Precision size of KV cache elements in bytes (e.g. `2` for FP16 KV cache, `1` for Q8_0 FP8 KV cache).
+
 ## State Machine Execution Protocol
 
 ### Step 1: Hardware Discovery & GQA VRAM Proof
