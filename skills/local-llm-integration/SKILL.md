@@ -21,6 +21,7 @@ Before execution, inspect and populate the following context objects:
   },
   "model_spec": {
     "model_id": "Qwen/Qwen2.5-Coder-7B-Instruct-GGUF",
+    "local_model_path": "/mnt/models/Qwen2.5-Coder-7B-Instruct-Q4_K_M.gguf",
     "param_count_b": 7.61,
     "quant_type": "gguf | awq | gptq | fp16",
     "quant_bytes_per_param": 0.55,
@@ -58,17 +59,18 @@ Before execution, inspect and populate the following context objects:
 
 ### Step 2: Engine Selection & Process-Scoped Launch
 
-1. Define dynamic process-scoped file paths based on target port:
+1. Initialize execution environment variables dynamically:
    ```bash
+   PORT=<port>
    PID_FILE="/tmp/indium_llm_${PORT}.pid"
    LOG_FILE="/tmp/indium_llm_${PORT}.log"
    ```
 
 2. Construct quantization parameters dynamically:
    - If `quant_type` is `"fp16"`, set `QUANT_FLAG=""`.
-   - Otherwise, set `QUANT_FLAG="--quantization ${quant_type}"`.
+   - Otherwise, set `QUANT_FLAG="--quantization <quant_type>"`.
 
-3. Launch background daemon bound to `127.0.0.1:${PORT}`:
+3. Launch background daemon bound to `127.0.0.1:<port>`:
    - **Path A: Enterprise CUDA Multi-User Server (vLLM)**:
      ```bash
      vllm serve <model_id> \
@@ -84,8 +86,9 @@ Before execution, inspect and populate the following context objects:
    - **Path B: Edge / Desktop / Apple Silicon Metal (llama.cpp)**:
      ```bash
      llama-server \
-       -m <gguf_path> \
+       -m <local_model_path> \
        -c <context_length> \
+       -np <max_batch_size> \
        --port <port> \
        --host 127.0.0.1 > "${LOG_FILE}" 2>&1 &
      echo $! > "${PID_FILE}"
@@ -113,9 +116,10 @@ Before execution, inspect and populate the following context objects:
 1. **HTTP Health Check Polling**:
    Execute a bounded retry loop to allow weight loading into VRAM (timeout after 60s):
    ```bash
+   PORT=<port>
    TIMEOUT=60
    ELAPSED=0
-   until [ "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:<port>/v1/models)" = "200" ]; do
+   until [ "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:${PORT}/v1/models)" = "200" ]; do
      if [ $ELAPSED -ge $TIMEOUT ]; then
        echo "HEALTHCHECK_TIMEOUT"
        exit 1
@@ -127,8 +131,9 @@ Before execution, inspect and populate the following context objects:
 
 2. **TTFT SLA Benchmark**:
    ```bash
+   PORT=<port>
    curl -s -w "\nTTFT: %{time_starttransfer}s\nTOTAL: %{time_total}s\nHTTP: %{http_code}\n" \
-     -X POST http://127.0.0.1:<port>/v1/chat/completions \
+     -X POST http://127.0.0.1:${PORT}/v1/chat/completions \
      -H "Content-Type: application/json" \
      -d '{"model": "<model_id>", "messages": [{"role": "user", "content": "ping"}], "max_tokens": 10}'
    ```
@@ -140,6 +145,8 @@ If health checks time out, assertions fail, or CUDA OOM is detected in `${LOG_FI
 1. Capture diagnostic log snippet: `tail -n 50 "${LOG_FILE}"`
 2. Terminate the scoped process hierarchy cleanly:
    ```bash
+   PORT=<port>
+   PID_FILE="/tmp/indium_llm_${PORT}.pid"
    if [ -f "${PID_FILE}" ]; then
      TARGET_PID=$(cat "${PID_FILE}")
      pkill -9 -P "${TARGET_PID}" 2>/dev/null
