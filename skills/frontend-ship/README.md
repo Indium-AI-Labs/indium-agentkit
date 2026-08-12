@@ -1,32 +1,17 @@
 # Frontend Ship Skill (`skills/frontend-ship`)
 
-The **`frontend-ship`** skill provides AI coding agents (Claude Code, Cursor, Codex, Antigravity CLI) with deterministic, accessible, and high-performance frontend UI engineering protocols.
+The **`frontend-ship`** skill provides AI coding agents (Claude Code, Cursor, Codex, Antigravity CLI, Claude.ai, ChatGPT) with deterministic, accessible, and high-performance frontend UI engineering protocols.
 
 ---
 
-## ⚡ Setup Guide: Terminal & Web UI
+## ⚡ 1-Line Quick Installation
 
-### Option A: Terminal & Local AI Editors (Cursor, Claude Code, Windsurf)
-Run this single command in your project terminal:
+To install this skill into any project repository in under 2 seconds, run:
 
 ```bash
-npx github:sagarrathi16/indium-agentkit add frontend-ship
+npx indium-agentkit add frontend-ship
 ```
-*Automatically configures Cursor rules (`.cursor/rules/frontend-ship.mdc`), Claude Code (`CLAUDE.md`), and Windsurf / Copilot configurations directly from GitHub!*
-
----
-
-### Option B: Web Chat UIs (Claude.ai, ChatGPT, Claude Projects, Custom GPTs)
-
-#### 1. Claude.ai Projects / ChatGPT Custom GPTs (Recommended — Set Once, Use Forever)
-1. Open your **Claude Project** or **Custom GPT**.
-2. Click **"Add Knowledge"** / **"Project Knowledge"**.
-3. Upload [SKILL.md](SKILL.md) or copy-paste its raw text.
-4. Now simply type plain English prompts in your chat session!
-
-#### 2. One-Shot Web Chat (Claude.ai / ChatGPT / Gemini Web)
-Paste `SKILL.md` into your chat opening:
-> *"Adopt this skill protocol: **[Paste SKILL.md content]**. Now build a glassmorphic user profile card at `/profile`."*
+*Automatically configures Cursor rules (`.cursor/rules/frontend-ship.mdc`), Claude Code (`CLAUDE.md`), and Windsurf / Copilot configurations.*
 
 ---
 
