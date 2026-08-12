@@ -4,32 +4,38 @@ The **`frontend-ship`** skill provides AI coding agents (Claude Code, Cursor, Co
 
 ---
 
-## 🚀 Quickstart: Copy-Paste User Prompt Recipes
+## ⚡ 1-Line Quick Installation
 
-Simply copy and paste one of the prompt templates below into your AI agent session. The agent will automatically construct the required `FrontendShipContextManifest` JSON and build your UI component!
+To install this skill into any project repository in under 2 seconds, run:
 
----
-
-### 🎨 Template A: Pure UI Design Mode (No API Endpoint Required)
-
-Use this when you want to design stunning UI layouts, glassmorphic cards, landing page sections, or component design systems **without needing a backend API endpoint**:
-
-```markdown
-Use `@frontend-ship` to design a glassmorphic user profile card component at `/settings/profile`.
-
-Requirements:
-- Aesthetic: glassmorphic (translucent cards, blur filters, aurora glow background)
-- Component Name: user-profile-card
-- Rendering Mode: rsc_with_client_boundary
-- Provide realistic mock data for user metrics, avatar fallback, and status badge.
-- Ensure full WCAG 2.1 AAA keyboard navigation and 7 UI view states.
+```bash
+npx indium-agentkit add frontend-ship
 ```
 
+*Automatically configures Cursor rules (`.cursor/rules/frontend-ship.mdc`), Claude Code (`CLAUDE.md`), and Windsurf / Copilot configurations.*
+
 ---
 
-### 🔌 Template B: Full-Stack API Integration Mode
+## 💬 Zero-JSON Non-Technical Mode (Plain English Prompts)
 
-Use this when building a full-stack UI feature connected to a backend REST or GraphQL endpoint:
+Non-technical users do **not** need to write or see any JSON manifests. Simply copy and type a plain English sentence into Cursor, Claude Code, or Antigravity:
+
+### 🌟 Simple Plain English Prompt Formula
+> *"Use `@frontend-ship` to design a **[aesthetic]** **[component name]** at **[route]**."*
+
+### 💡 Examples:
+- **Glassmorphism**: *"Use `@frontend-ship` to design a glassmorphic user profile card at `/settings/profile`."*
+- **Minimalist**: *"Use `@frontend-ship` to design a minimalist dark-mode pricing table at `/pricing`."*
+- **Expressive**: *"Use `@frontend-ship` to design an expressive analytics dashboard card at `/dashboard`."*
+- **3D Spatial**: *"Use `@frontend-ship` to design a 3D spatial tilt product card at `/products`."*
+
+The AI Agent automatically infers all routes, visual design tokens, state machine views, and accessibility rules behind the scenes!
+
+---
+
+## 🤖 Technical / Orchestrator Mode (JSON Manifest)
+
+For automated pipelines or developer workflows connecting to backend endpoints:
 
 ```markdown
 Use `@frontend-ship` to build the analytics dashboard feature at `/dashboard/analytics`.
@@ -60,41 +66,12 @@ Context Manifest:
 
 ---
 
-## 🎭 Aesthetic Mode Prompt Recipes
+## 🎭 Aesthetic Mode Options
 
-Customize your UI prompt by specifying one of the four curated aesthetic modes:
-
-### 1. 💎 `glassmorphic`
-> *"Design a glassmorphic analytics card at `/analytics` using translucent background surfaces (`rgba(23, 32, 54, 0.55)`), heavy backdrop blur filters (`blur(16px)`), specular rim light borders, and radial aurora glow gradients."*
-
-### 2. ✨ `minimalist`
-> *"Build a minimalist data table component at `/users` using monochromatic surface scales, clean typography spacing (`clamp()`), subtle hairline borders (`1px solid var(--color-border-hairline)`), and high contrast readability."*
-
-### 3. 🔥 `expressive`
-> *"Create an expressive feature pricing grid at `/pricing` using vibrant brand accent gradients, micro-interaction hover lifts (`translateY(-3px)`), and spring physics animation curves (`cubic-bezier(0.16, 1, 0.3, 1)`)."*
-
-### 4. 🧊 `spatial_3d`
-> *"Implement a 3D spatial tilt card container at `/explore` using CSS 3D perspective transforms (`perspective: 1000px`, `transform-style: preserve-3d`), interactive rotation on hover, and depth elevation shadows."*
-
----
-
-## 🤖 Automatic Context Schema Generation
-
-When you invoke this skill via natural language prompts, the AI agent automatically formats the context payload:
-
-```json
-{
-  "component_spec": {
-    "feature_name": "<feature_name>",
-    "target_route": "<target_route>",
-    "rendering_mode": "rsc_with_client_boundary"
-  },
-  "design_system_context": {
-    "aesthetic_mode": "glassmorphic",
-    "token_source": "styles/globals.css"
-  }
-}
-```
+- 💎 **`glassmorphic`**: Translucent cards, blur filters (`blur(16px)`), specular rim light borders, radial aurora glow.
+- ✨ **`minimalist`**: Clean monochromatic surfaces, high contrast readability, subtle hairline borders.
+- 🔥 **`expressive`**: Micro-interaction spring physics (`cubic-bezier(0.16, 1, 0.3, 1)`), hover lifts, vibrant brand accents.
+- 🧊 **`spatial_3d`**: CSS 3D perspective transforms (`perspective: 1000px`, `transform-style: preserve-3d`), hover tilt cards.
 
 ---
 
