@@ -11,63 +11,80 @@ The default target stack is **Next.js App Router (React Server Components & Clie
 
 ---
 
-## 1. System Architecture & Deterministic Execution State Machine
+## 1. Required I/O Context Schemas
 
-```mermaid
-graph TD
-    P1["Phase 1: Contract & Brief Ingestion"] --> P2["Phase 2: Rendering Topology & Boundaries"]
-    P2 --> P3["Phase 3: Visual Design Tokens & Aesthetic Ingestion"]
-    P3 --> P4["Phase 4: 7-State UI View Synthesis"]
-    P4 --> P5["Phase 5: WCAG 2.1 AAA & Focus Control"]
-    P5 --> P6["Phase 6: Seam Testing & SLA Verification"]
+The orchestrator must supply the following JSON-RPC context manifest before invoking this skill. If any required property (`component_spec` or `design_system_context`) is missing, the agent **must abort execution immediately**.
+
+`interface_contract` is **optional**. When omitted, the skill operates in **Pure UI Design / Presentational Mode**, rendering components with typed props and mock data.
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "FrontendShipContextManifest",
+  "type": "object",
+  "required": ["component_spec", "design_system_context"],
+  "properties": {
+    "component_spec": {
+      "type": "object",
+      "required": ["feature_name", "target_route", "rendering_mode"],
+      "properties": {
+        "feature_name": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+        "target_route": { "type": "string", "pattern": "^/[a-zA-Z0-9/_-]*$" },
+        "rendering_mode": { "type": "string", "enum": ["rsc_with_client_boundary", "client_only", "server_only"] }
+      }
+    },
+    "design_system_context": {
+      "type": "object",
+      "required": ["aesthetic_mode", "token_source"],
+      "properties": {
+        "aesthetic_mode": { "type": "string", "enum": ["minimalist", "expressive", "glassmorphic", "spatial_3d"] },
+        "token_source": { "type": "string" }
+      }
+    },
+    "interface_contract": {
+      "type": "object",
+      "required": ["api_endpoint", "http_method", "response_schema"],
+      "properties": {
+        "api_endpoint": { "type": "string" },
+        "http_method": { "type": "string", "enum": ["GET", "POST", "PUT", "PATCH", "DELETE"] },
+        "response_schema": { "type": "object" },
+        "auth_required": { "type": "boolean", "default": true }
+      }
+    }
+  }
+}
 ```
-
-### Execution Flow Protocol
-
-#### Phase 1: Contract & Brief Ingestion
-- Ingest `AGENTS.md`, design specifications, and typed backend API schemas.
-- Identify missing backend routes, data attributes, or authorization requirements. State explicit assumptions before inventing server endpoints or client data shapes.
-
-#### Phase 2: Rendering Topology & Boundaries
-- Determine rendering placement for every component:
-  - **Server Components (RSC)**: Data fetching, database access, heavy computations, sensitive business logic, and static markup.
-  - **Client Components (`'use client'`)**: Event listeners (`onClick`, `onChange`), React state (`useState`, `useReducer`), browser APIs (`localStorage`, `window`), custom animation hooks, 3D tilt effects, and WebGL contexts.
-- **Invariant**: Never import server-only modules or expose private environment variables (`DATABASE_URL`, `API_SECRET`) inside client-side bundles.
-
-#### Phase 3: Visual Design Tokens & Aesthetic Ingestion
-- Ingest visual design system primitives across four core aesthetic modes: **Minimalist**, **Expressive**, **Glassmorphic**, and **3D Spatial Depth**.
-- **Invariant**: Ban generic browser defaults, plain red/blue/green colors, uncurated hex values (`#ff0000`), or arbitrary pixel font sizes (`font-size: 13px`).
-
-#### Phase 4: 7-State UI View Synthesis
-- Implement deterministic views for all 7 mandatory UI states:
-  1. `INITIAL`: Idle baseline state before user interaction.
-  2. `LOADING`: Skeleton loader fallbacks with `aria-busy="true"` and non-blocking layout shifts.
-  3. `SUCCESS`: Interactive state displaying valid server data with semantic HTML landmarks.
-  4. `EMPTY`: Actionable fallback state when dataset returns length $0$, offering clear next steps.
-  5. `ERROR`: Non-sensitive, actionable error UI state with recovery controls.
-  6. `RETRY`: Deterministic backoff execution and focus restoration on retry trigger.
-  7. `PERMISSION_DENIED`: 403 / Unauthenticated fallback view prompting appropriate auth flows.
-
-#### Phase 5: WCAG 2.1 AAA Accessibility & Focus Control
-- Enforce full keyboard operability (`Tab`, `Shift+Tab`, `Enter`, `Space`, `Escape`, `Arrow` keys).
-- Implement focus trap management inside modal overlays and ensure visible focus rings (`:focus-visible`).
-- Provide live region announcements (`aria-live="polite"` / `aria-live="assertive"`) for dynamic updates.
-
-#### Phase 6: Seam Testing, SLA Audit & Handoff
-- Add behavior-focused tests at public component boundaries using Playwright or Vitest.
-- Verify Core Web Vitals targets ($LCP < 1.2\text{s}$, $CLS < 0.05$, $INP < 100\text{ms}$).
-- Update verification reports with changing UI routes, test execution commands, and handoff state artifacts.
 
 ---
 
-## 2. Visual Design System Tokens & Aesthetics (Minimalist, Expressive, Glassmorphic, 3D)
+## 2. Deterministic State Machine Execution Flow
 
-All visual styling must consume structured design system tokens via CSS Custom Properties.
+Follow this exact sequential protocol. Do not skip steps or alter execution ordering.
+
+### Step 1: Context Manifest & Contract Ingestion
+1. Read the provided `FrontendShipContextManifest` JSON payload.
+2. Verify `component_spec` and `design_system_context`.
+3. Check if `interface_contract` is present:
+   - **Present**: Component operates in API Integration Mode (fetching from `api_endpoint`).
+   - **Omitted**: Component operates in Pure UI Design Mode (rendering via typed props and realistic mock data).
+
+### Step 2: Component Topology & Directory Scaffolding
+1. Inspect `package.json` to confirm framework conventions (Next.js App Router vs Page Router, Vite, etc.).
+2. Execute scaffolding to isolate component modules:
+   ```bash
+   mkdir -p components/ui src/app/[target_route] tests/e2e
+   ```
+3. Establish Server Component (RSC) vs Client Component (`'use client'`) boundaries:
+   - Keep data fetching and server secrets inside RSC modules.
+   - Restrict `'use client'` strictly to interactive event handlers, React state (`useState`, `useReducer`), and DOM/canvas animation hooks.
+
+### Step 3: Design System Tokens & Aesthetic Ingestion
+1. Import or declare CSS Custom Properties matching the target `aesthetic_mode`:
 
 ```css
 /* Core Visual Design Tokens Contract */
 :root {
-  /* 1. Minimalist & Surface Color System (HSL Curated) */
+  /* 1. Surface & Color System (HSL Curated) */
   --color-bg-base: hsl(222, 47%, 10%);
   --color-surface-card: hsl(217, 33%, 15%);
   --color-surface-hover: hsl(217, 33%, 20%);
@@ -84,20 +101,14 @@ All visual styling must consume structured design system tokens via CSS Custom P
   --color-brand-accent: hsl(270, 95%, 65%);
   --gradient-brand-primary: linear-gradient(135deg, hsl(210, 100%, 56%) 0%, hsl(270, 95%, 65%) 100%);
   --gradient-aurora-glow: radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.25) 0%, rgba(147, 51, 234, 0.15) 50%, transparent 100%);
-  --gradient-surface-shine: linear-gradient(180deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0.01) 100%);
 
   /* 3. Glassmorphism & Depth System */
   --glass-bg: rgba(23, 32, 54, 0.55);
   --glass-bg-hover: rgba(30, 41, 68, 0.68);
   --glass-border: 1px solid rgba(255, 255, 255, 0.12);
-  --glass-border-glow: 1px solid rgba(147, 51, 234, 0.35);
   --glass-backdrop: blur(16px) saturate(180%);
-  --glass-backdrop-heavy: blur(24px) saturate(200%);
 
   /* Multi-Layered Elevation Shadows */
-  --elevation-sm: 0 2px 4px rgba(0, 0, 0, 0.2);
-  --elevation-md: 0 8px 16px -2px rgba(0, 0, 0, 0.3), 0 4px 8px -2px rgba(0, 0, 0, 0.2);
-  --elevation-lg: 0 20px 30px -5px rgba(0, 0, 0, 0.4), 0 10px 15px -5px rgba(0, 0, 0, 0.25);
   --elevation-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.37), inset 0 1px 0 0 rgba(255, 255, 255, 0.15);
   --elevation-glow-brand: 0 0 25px -5px rgba(59, 130, 246, 0.4);
 
@@ -107,68 +118,54 @@ All visual styling must consume structured design system tokens via CSS Custom P
   --font-size-sm: clamp(0.875rem, 0.8rem + 0.35vw, 1rem);
   --font-size-md: clamp(1rem, 0.9rem + 0.5vw, 1.25rem);
   --font-size-lg: clamp(1.25rem, 1.1rem + 0.75vw, 1.75rem);
-  --font-size-xl: clamp(1.75rem, 1.4rem + 1.25vw, 2.5rem);
-
-  /* Spacing Scale */
-  --space-1: 0.25rem;
-  --space-2: 0.5rem;
-  --space-3: 0.75rem;
-  --space-4: 1rem;
-  --space-6: 1.5rem;
-  --space-8: 2rem;
-  --space-12: 3rem;
-
-  /* Border Radii */
-  --radius-sm: 0.375rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 0.875rem;
-  --radius-full: 9999px;
 
   /* Spring Physics & Micro-Animation Curves */
   --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
   --duration-fast: 150ms;
   --duration-normal: 250ms;
-  --duration-slow: 400ms;
 }
 
-/* Glassmorphic Card Utility Class */
 .glass-card {
   background: var(--glass-bg);
   backdrop-filter: var(--glass-backdrop);
   -webkit-backdrop-filter: var(--glass-backdrop);
   border: var(--glass-border);
   box-shadow: var(--elevation-glass);
-  border-radius: var(--radius-lg);
+  border-radius: 0.875rem;
   transition: transform var(--duration-normal) var(--ease-spring),
-              background var(--duration-normal) var(--ease-spring),
-              box-shadow var(--duration-normal) var(--ease-spring);
+              background var(--duration-normal) var(--ease-spring);
 }
 
 .glass-card:hover {
   background: var(--glass-bg-hover);
   transform: translateY(-3px) scale(1.01);
-  box-shadow: var(--elevation-lg), var(--elevation-glow-brand);
-}
-
-/* 3D Perspective Card Container */
-.card-3d-wrapper {
-  perspective: 1000px;
-}
-
-.card-3d-inner {
-  transform-style: preserve-3d;
-  transition: transform var(--duration-normal) var(--ease-spring);
-}
-
-.card-3d-inner:hover {
-  transform: rotateX(4deg) rotateY(-4deg) translateZ(10px);
 }
 ```
 
+### Step 4: 7-State UI View Synthesis
+Implement explicit, observable UI views for all 7 mandatory states:
+1. `INITIAL`: Baseline idle component state.
+2. `LOADING`: Skeleton fallback layout with `aria-busy="true"`.
+3. `SUCCESS`: Interactive data view with semantic HTML landmarks.
+4. `EMPTY`: Actionable zero-data fallback state.
+5. `ERROR`: Non-sensitive, user-actionable error state with recovery controls.
+6. `RETRY`: Deterministic connection retry backoff.
+7. `PERMISSION_DENIED`: 403 / Unauthenticated fallback view.
+
+### Step 5: WCAG 2.1 AAA Accessibility & Focus Control
+1. Ensure complete keyboard operability (`Tab`, `Shift+Tab`, `Enter`, `Space`, `Escape`).
+2. Implement focus trap management inside overlay modals and visible focus rings (`:focus-visible`).
+3. Add live region status updates (`aria-live="polite"`).
+
+### Step 6: Verification, Type Audit & Test Execution
+1. Run static analysis and type checks: `npx tsc --noEmit`.
+2. Run linter: `npm run lint`.
+3. Execute unit/integration tests: `npm run test` or `npx vitest run`.
+4. Execute Playwright E2E seam assertions: `npx playwright test`.
+
 ---
 
-## 3. Reference Implementation: 7-State Accessible Glassmorphic & 3D Component Pattern
+## 3. Reference Implementation: 7-State Accessible Component Pattern
 
 ```tsx
 'use client';
@@ -185,17 +182,33 @@ interface DataRecord {
 }
 
 interface ComponentProps {
-  apiEndpoint: string;
+  apiEndpoint?: string;
   authToken?: string;
+  initialData?: DataRecord[];
 }
 
-export function ExpressiveFeatureContainer({ apiEndpoint, authToken }: ComponentProps) {
+export function ExpressiveFeatureContainer({ apiEndpoint, authToken, initialData }: ComponentProps) {
   const [viewState, setViewState] = useState<UIViewState>('INITIAL');
-  const [data, setData] = useState<DataRecord[]>([]);
+  const [data, setData] = useState<DataRecord[]>(initialData || []);
   const [errorMessage, setErrorMessage] = useState<string>('');
   const retryButtonRef = useRef<HTMLButtonElement>(null);
 
   const fetchData = async () => {
+    // If no API endpoint is passed, operate in Pure UI Design Mode with mock data
+    if (!apiEndpoint) {
+      if (initialData && initialData.length > 0) {
+        setData(initialData);
+        setViewState('SUCCESS');
+      } else {
+        setData([
+          { id: '1', title: 'Aurora Visual Engine', category: 'Design', metric: '60 FPS' },
+          { id: '2', title: 'Glassmorphic Card Depth', category: 'Aesthetic', metric: '100%' },
+        ]);
+        setViewState('SUCCESS');
+      }
+      return;
+    }
+
     if (!authToken) {
       setViewState('PERMISSION_DENIED');
       return;
@@ -244,8 +257,8 @@ export function ExpressiveFeatureContainer({ apiEndpoint, authToken }: Component
   }, [viewState]);
 
   return (
-    <section className="glass-card card-3d-wrapper" aria-live="polite" aria-busy={viewState === 'LOADING'}>
-      <div className="card-3d-inner p-6">
+    <section className="glass-card" aria-live="polite" aria-busy={viewState === 'LOADING'}>
+      <div className="p-6">
         {viewState === 'INITIAL' && (
           <div className="state-view state-idle">
             <p className="text-muted">Initializing interactive view...</p>
@@ -256,13 +269,12 @@ export function ExpressiveFeatureContainer({ apiEndpoint, authToken }: Component
           <div className="state-view state-skeleton" role="status" aria-label="Loading content">
             <div className="skeleton-line header-skeleton" />
             <div className="skeleton-line body-skeleton" />
-            <div className="skeleton-line body-skeleton short" />
           </div>
         )}
 
         {viewState === 'PERMISSION_DENIED' && (
           <div className="state-view state-denied" role="alert">
-            <h3 className="text-gradient">Access Restricted</h3>
+            <h3>Access Restricted</h3>
             <p>Authentication token required to render this dataset.</p>
           </div>
         )}
@@ -276,7 +288,7 @@ export function ExpressiveFeatureContainer({ apiEndpoint, authToken }: Component
 
         {viewState === 'ERROR' && (
           <div className="state-view state-error" role="alert">
-            <h3 className="text-error">Unable to Sync View</h3>
+            <h3>Unable to Sync View</h3>
             <p>{errorMessage}</p>
             <button
               ref={retryButtonRef}
@@ -284,7 +296,7 @@ export function ExpressiveFeatureContainer({ apiEndpoint, authToken }: Component
                 setViewState('RETRY');
                 fetchData();
               }}
-              className="btn-primary-gradient"
+              className="btn-primary"
             >
               Retry Connection
             </button>
@@ -296,7 +308,7 @@ export function ExpressiveFeatureContainer({ apiEndpoint, authToken }: Component
             {data.map((item) => (
               <li key={item.id} className="record-card-glass">
                 <span className="record-title">{item.title}</span>
-                <span className="record-badge-glow">{item.category}</span>
+                <span className="record-badge">{item.category}</span>
                 <span className="record-metric">{item.metric}</span>
               </li>
             ))}
@@ -366,43 +378,49 @@ $$\text{Initial Bundle Size} = \sum \text{JS Client Chunks} < 50\text{KB (gzip)}
 
 ---
 
-## 6. Security, Sanitization & Boundary Guardrails
+## 6. Guardrails
 
+### Operational Restrictions
+- **No Unapproved Dependencies**: Do **NOT** execute `npm install` or add third-party packages without explicit user authorization.
+- **Strict File Scope**: Modify only component files in the assigned target route directory. Do not alter root layout files (`app/layout.tsx`) or global configuration (`next.config.js`) unless instructed in the brief.
+
+### Security Invariants
 - **Zero Credential Exposure**: Never expose private API keys (`STRIPE_SECRET_KEY`, `DATABASE_PASSWORD`) in client-side bundles or `NEXT_PUBLIC_` environment variables.
 - **XSS Prevention**: Never bypass React DOM escaping with `dangerouslySetInnerHTML` unless input is sanitized through a verified library (e.g. DOMPurify).
-- **Untrusted Input Boundaries**: Parse all URL parameters, form data, and API payloads through typed Zod or Pydantic schemas before mutating state.
-- **CSRF & SameSite Cookies**: Ensure all mutating form submissions transmit SameSite=Strict cookies and CSRF tokens.
+- **Boundary Validation**: Parse all URL parameters, form data, and API payloads through typed Zod or TypeScript contracts before mutating state.
 
 ---
 
-## 7. I/O Context Schema & Environment vs. Framework Dependency Matrix
+## 7. Atomic Failure Recovery & Rollback Handler
 
-| Variable / Parameter | Type | Schema / Format | Description | Dependency Classification |
-| :--- | :--- | :--- | :--- | :--- |
-| `API_ENDPOINT` | `string` | `https://*` or `/api/*` | Target REST or GraphQL endpoint URL for feature data fetching. | **Environment-Dependent** |
-| `AUTH_TOKEN` | `string` | JWT / Bearer string | Active user authentication token passed in request headers. | **Environment-Dependent** |
-| `VIEW_STATE` | `string` | `INITIAL` \| `LOADING` \| `SUCCESS` \| `EMPTY` \| `ERROR` \| `RETRY` \| `PERMISSION_DENIED` | Active component state driving conditional rendering views. | **Framework-Dependent** |
-| `DESIGN_TOKENS` | `object` | CSS Custom Properties | Minimalist, Expressive, Glassmorphism, and 3D depth visual tokens. | **Framework-Dependent** |
-| `CORE_WEB_VITALS_SLA` | `object` | LCP < 1.2s, CLS < 0.05, INP < 100ms | Mathematical latency and layout shift performance targets. | **Framework-Dependent** |
-
----
-
-## 8. Verification Plan & CI Commands
-
-Execute the following verification suite after modifying or updating any frontend features:
+If any verification command in Step 6 (`npx tsc`, `npm run lint`, `npm run test`, `npx playwright test`) fails and cannot be resolved within 2 iterations, the agent **must execute atomic rollback**:
 
 ```bash
-# 1. Validate repository content invariants and SKILL.md frontmatter
-python3 scripts/validate_content.py
+# Revert all modified component and test files in target route
+git checkout -- components/ui/ src/app/ tests/e2e/
 
-# 2. Rebuild Cursor rules and Catalog inventories
-python3 scripts/build_cursor_rules.py --skills-dir skills --out-dir .cursor/rules
-python3 scripts/generate_catalog.py
-python3 scripts/diff_catalog.py
+# Clean up untracked temporary scaffolded files
+git clean -fd components/ui/ src/app/ tests/e2e/
+```
 
-# 3. Validate zero-trust RBAC catalog rules
-python3 scripts/validate_rbac_schema.py --target-dir .
+After executing rollback, output the exact error trace and state failure causes.
 
-# 4. Execute unit test discovery suite
-python3 -m unittest discover -s tests -v
+---
+
+## 8. Verification Plan & Node.js CI Toolchain Commands
+
+Execute the following frontend toolchain commands to verify the UI code:
+
+```bash
+# 1. Type check TypeScript components and contracts
+npx tsc --noEmit
+
+# 2. Execute code linter
+npm run lint
+
+# 3. Run component and unit tests
+npm run test
+
+# 4. Execute Playwright E2E browser seam assertions
+npx playwright test
 ```
