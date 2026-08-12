@@ -94,13 +94,25 @@ recovery. Never infer production safety from local migration syntax alone.
 
 ```text
 Status: PASSED | BLOCKED | PARTIAL
-Current state: entities, constraints, indexes, ownership
-Target state: additions, removals, invariants
+## Current and target state
+Entities, constraints, indexes, ownership, additions, removals, and invariants.
 Access paths: affected reads/writes and index rationale
-Rollout: preflight -> expand -> backfill -> cutover -> contract
-Rollback: stop point, reversal, data-loss limitation
-Verification: counts, invariants, plans, application checks
-Approvals: owners and unresolved decisions
+## Preflight
+Backups, volume estimates, lock assessment, feature flags, and required
+application versions.
+## Rollout
+Preflight -> expand -> backfill -> cutover -> contract, including batching and
+deployment ordering.
+## Rollback
+Stop point, reversal, and data-loss limitation.
+## Verification
+Counts, invariants, plans, and application checks.
+## Handoff
+**Changed contract:** Nullability, defaults, uniqueness, and API effects.
+**Files / systems affected:** Schemas, migrations, services, and jobs.
+**Evidence and tests:** Dry runs and validation evidence.
+**Risks / rollback:** Locks, data-loss risks, and recovery path.
+**What the next agent needs:** Approvals, sequencing, and open questions.
 ```
 
 ## Environment prerequisites and execution SLA
