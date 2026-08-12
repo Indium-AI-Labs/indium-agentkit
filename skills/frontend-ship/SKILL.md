@@ -11,11 +11,14 @@ The default target stack is **Next.js App Router (React Server Components & Clie
 
 ---
 
-## 1. Required I/O Context Schemas
+## 1. Required I/O Context Schemas & Natural Language Auto-Inference
 
-The orchestrator must supply the following JSON-RPC context manifest before invoking this skill. If any required property (`component_spec` or `design_system_context`) is missing or malformed, the agent **must abort execution immediately**.
+The skill supports **two invocation modes**:
 
-`interface_contract` is **optional**. When omitted, the skill operates in **Pure UI Design / Presentational Mode**, rendering components with typed props and mock data.
+1. **🤖 Orchestrator / Technical Mode (JSON Manifest)**: Pass the JSON-RPC context manifest below.
+2. **💬 Non-Technical Mode (Plain English Prompts)**: If the user provides a natural language prompt (e.g. *"Build a glassmorphic user profile card at `/settings/profile`"*), the agent **must automatically infer and populate** `feature_name`, `target_route`, `rendering_mode`, `aesthetic_mode`, and `token_source` from the user's text!
+
+### JSON Context Manifest Schema
 
 ```json
 {
@@ -55,15 +58,23 @@ The orchestrator must supply the following JSON-RPC context manifest before invo
 }
 ```
 
+### Automatic Natural Language Inference Rules
+If no raw JSON payload is provided, apply these defaults:
+- **`feature_name`**: Extracted from prompt or derived from target route (e.g. `/profile` $\rightarrow$ `user-profile`).
+- **`target_route`**: Extracted from prompt URL or defaults to `/components/<feature_name>`.
+- **`rendering_mode`**: Defaults to `rsc_with_client_boundary`.
+- **`aesthetic_mode`**: Inferred from prompt keywords (`glassmorphic`, `minimalist`, `expressive`, `spatial_3d`). Defaults to `glassmorphic`.
+- **`token_source`**: Detects local `styles/globals.css`, `app/globals.css`, or creates CSS custom properties in `components/ui/${FEATURE_NAME}/styles.css`.
+
 ---
 
 ## 2. Deterministic State Machine Execution Flow
 
 Follow this exact sequential protocol. Do not skip steps or alter execution ordering.
 
-### Step 1: Context Manifest & Contract Ingestion
-1. Read the provided `FrontendShipContextManifest` JSON payload.
-2. Validate that `component_spec` (`feature_name`, `target_route`, `rendering_mode`) and `design_system_context` (`aesthetic_mode`, `token_source`) are fully declared. If missing, output missing fields and **ABORT**.
+### Step 1: Context Ingestion & Parameter Resolution
+1. Check if raw `FrontendShipContextManifest` JSON is provided.
+2. If JSON is missing, parse the user's natural language request and apply the **Automatic Natural Language Inference Rules** to build the parameter context in memory.
 3. Check if `interface_contract` is present:
    - **Present**: Component operates in API Integration Mode (fetching from `api_endpoint`).
    - **Omitted**: Component operates in Pure UI Design Mode (rendering via typed props and realistic mock data).
