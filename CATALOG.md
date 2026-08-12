@@ -52,9 +52,9 @@ python scripts/list_content.py --format markdown
 | subagent | `backend-builder` | Implement scoped typed API behavior with server-side safeguards. |
 | subagent | `ci-verifier` | Diagnose CI workflows and report exact verification evidence. |
 | subagent | `compliance-auditor` | Read-only compliance specialist that audits code, data flows, PII redaction, encryption, and audit logs against compliance control standards. |
-| subagent | `data-engineer` | Read-only data engineering specialist that inspects schemas, pipeline transformations, partitioning strategies, and query performance. |
+| subagent | `data-engineer` | Audit data pipelines, models, quality, and governance read-only. |
 | subagent | `database-architect` | Analyze schemas and propose safe, verified migration plans. |
-| subagent | `dependency-auditor` | Read-only dependency specialist that scans manifests, lockfiles, and advisory databases for vulnerabilities, staleness, and license risks. |
+| subagent | `dependency-auditor` | Audit dependency vulnerabilities, staleness, and license risk read-only. |
 | subagent | `doc-writer` | Read-only documentation specialist that analyzes code, tests, and history to draft accurate project documentation. |
 | subagent | `estimator` | Read-only estimation specialist that analyzes scope, complexity, dependencies, and risk to produce effort assessments. |
 | subagent | `explorer` | Read-only codebase explorer that maps relevant files, control flow, conventions, and uncertainties for a focused task. |
@@ -63,10 +63,10 @@ python scripts/list_content.py --format markdown
 | subagent | `llm-evaluator` | Read-only LLM evaluation specialist that inspects prompt definitions, RAG retrieval logic, benchmark datasets, and guardrails. |
 | subagent | `migration-planner` | Read-only migration planner that inventories compatibility impact, rollout stages, rollback paths, and verification for schema, API, configuration, or file-format changes. |
 | subagent | `mobile-specialist` | Read-only mobile specialist that inspects build configurations, permission manifests, native bridges, bundle sizes, and store submission readiness. |
-| subagent | `performance-profiler` | Read-only performance specialist that chooses approved profiling methods, compares evidence against a baseline, and reports bottlenecks. |
+| subagent | `performance-profiler` | Measure performance bottlenecks against a reproducible baseline. |
 | subagent | `release-engineer` | Prepare release plans and assess deployment readiness. |
-| subagent | `resilience-reviewer` | Read-only resilience specialist that analyzes circuit breakers, retry backoffs, timeout configurations, connection pools, and fallbacks. |
+| subagent | `resilience-reviewer` | Review failure handling, retries, limits, and recovery paths read-only. |
 | subagent | `reviewer` | Read-only independent reviewer for a completed diff, branch, or pull request who reports actionable findings with evidence. |
-| subagent | `runbook-writer` | Read-only specialist that analyzes infrastructure, code, monitoring, and failure modes to draft operational runbooks. |
-| subagent | `security-reviewer` | Read-only security reviewer that traces trust boundaries, sensitive data, authorization, and exploit paths in a scoped change. |
+| subagent | `runbook-writer` | Draft evidence-backed operational runbooks from system behavior. |
+| subagent | `security-reviewer` | Review scoped changes for trust-boundary and exploit-path risks. |
 | subagent | `verifier` | Read-only verification specialist that runs declared tests, lint, builds, and focused reproductions and reports exact results. |
