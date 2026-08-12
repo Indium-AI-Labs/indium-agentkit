@@ -65,8 +65,8 @@ python scripts/list_content.py --format markdown
 | subagent | `mobile-specialist` | Read-only mobile specialist that inspects build configurations, permission manifests, native bridges, bundle sizes, and store submission readiness. |
 | subagent | `performance-profiler` | Measure performance bottlenecks against a reproducible baseline. |
 | subagent | `release-engineer` | Prepare release plans and assess deployment readiness. |
-| subagent | `resilience-reviewer` | Read-only resilience specialist that analyzes circuit breakers, retry backoffs, timeout configurations, connection pools, and fallbacks. |
+| subagent | `resilience-reviewer` | Review failure handling, retries, limits, and recovery paths read-only. |
 | subagent | `reviewer` | Read-only independent reviewer for a completed diff, branch, or pull request who reports actionable findings with evidence. |
-| subagent | `runbook-writer` | Read-only specialist that analyzes infrastructure, code, monitoring, and failure modes to draft operational runbooks. |
-| subagent | `security-reviewer` | Read-only security reviewer that traces trust boundaries, sensitive data, authorization, and exploit paths in a scoped change. |
+| subagent | `runbook-writer` | Draft evidence-backed operational runbooks from system behavior. |
+| subagent | `security-reviewer` | Review scoped changes for trust-boundary and exploit-path risks. |
 | subagent | `verifier` | Read-only verification specialist that runs declared tests, lint, builds, and focused reproductions and reports exact results. |
