@@ -52,7 +52,7 @@ python scripts/list_content.py --format markdown
 | subagent | `backend-builder` | Implement scoped typed API behavior with server-side safeguards. |
 | subagent | `ci-verifier` | Diagnose CI workflows and report exact verification evidence. |
 | subagent | `compliance-auditor` | Read-only compliance specialist that audits code, data flows, PII redaction, encryption, and audit logs against compliance control standards. |
-| subagent | `data-engineer` | Read-only data engineering specialist that inspects schemas, pipeline transformations, partitioning strategies, and query performance. |
+| subagent | `data-engineer` | Audit data pipelines, models, quality, and governance read-only. |
 | subagent | `database-architect` | Analyze schemas and propose safe, verified migration plans. |
 | subagent | `dependency-auditor` | Read-only dependency specialist that scans manifests, lockfiles, and advisory databases for vulnerabilities, staleness, and license risks. |
 | subagent | `doc-writer` | Read-only documentation specialist that analyzes code, tests, and history to draft accurate project documentation. |

@@ -1,6 +1,6 @@
 ---
 name: data-engineer
-description: "Read-only data engineering specialist that inspects schemas, pipeline transformations, partitioning strategies, and query performance."
+description: Audit data pipelines, models, quality, and governance read-only.
 tools: Read, Grep, Glob, Bash
 model: inherit
 ---
