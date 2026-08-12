@@ -4,21 +4,35 @@ The **`frontend-ship`** skill provides AI coding agents (Claude Code, Cursor, Co
 
 ---
 
-## ⚡ 1-Line Quick Installation
+## ⚡ Setup Guide: Terminal & Web UI
 
-To install this skill into any project repository in under 2 seconds, run:
+### Option A: Terminal & Local AI Editors (Cursor, Claude Code, Windsurf)
+Run this single command in your project terminal:
 
 ```bash
-npx indium-agentkit add frontend-ship
+npx github:sagarrathi16/indium-agentkit add frontend-ship
 ```
+*Automatically configures Cursor rules (`.cursor/rules/frontend-ship.mdc`), Claude Code (`CLAUDE.md`), and Windsurf / Copilot configurations directly from GitHub!*
 
-*Automatically configures Cursor rules (`.cursor/rules/frontend-ship.mdc`), Claude Code (`CLAUDE.md`), and Windsurf / Copilot configurations.*
+---
+
+### Option B: Web Chat UIs (Claude.ai, ChatGPT, Claude Projects, Custom GPTs)
+
+#### 1. Claude.ai Projects / ChatGPT Custom GPTs (Recommended — Set Once, Use Forever)
+1. Open your **Claude Project** or **Custom GPT**.
+2. Click **"Add Knowledge"** / **"Project Knowledge"**.
+3. Upload [SKILL.md](SKILL.md) or copy-paste its raw text.
+4. Now simply type plain English prompts in your chat session!
+
+#### 2. One-Shot Web Chat (Claude.ai / ChatGPT / Gemini Web)
+Paste `SKILL.md` into your chat opening:
+> *"Adopt this skill protocol: **[Paste SKILL.md content]**. Now build a glassmorphic user profile card at `/profile`."*
 
 ---
 
 ## 💬 Zero-JSON Non-Technical Mode (Plain English Prompts)
 
-Non-technical users do **not** need to write or see any JSON manifests. Simply copy and type a plain English sentence into Cursor, Claude Code, or Antigravity:
+Non-technical users do **not** need to write or see any JSON manifests. Simply copy and type a plain English sentence:
 
 ### 🌟 Simple Plain English Prompt Formula
 > *"Use `@frontend-ship` to design a **[aesthetic]** **[component name]** at **[route]**."*
@@ -28,8 +42,6 @@ Non-technical users do **not** need to write or see any JSON manifests. Simply c
 - **Minimalist**: *"Use `@frontend-ship` to design a minimalist dark-mode pricing table at `/pricing`."*
 - **Expressive**: *"Use `@frontend-ship` to design an expressive analytics dashboard card at `/dashboard`."*
 - **3D Spatial**: *"Use `@frontend-ship` to design a 3D spatial tilt product card at `/products`."*
-
-The AI Agent automatically infers all routes, visual design tokens, state machine views, and accessibility rules behind the scenes!
 
 ---
 
@@ -77,7 +89,7 @@ Context Manifest:
 
 ## 🧪 Verification Commands
 
-To verify your generated frontend components and UI seams:
+To verify generated frontend components and UI seams:
 
 ```bash
 # 1. Type check TypeScript components
