@@ -241,8 +241,9 @@ export function ExpressiveFeatureContainer({ apiEndpoint, authToken, initialData
         setData(result);
         setViewState('SUCCESS');
       }
-    } catch (err: any) {
-      setErrorMessage(err.message || 'An unexpected error occurred.');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'An unexpected error occurred.';
+      setErrorMessage(message);
       setViewState('ERROR');
     }
   };
