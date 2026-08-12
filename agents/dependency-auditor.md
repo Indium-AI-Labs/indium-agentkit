@@ -1,6 +1,6 @@
 ---
 name: dependency-auditor
-description: "Read-only dependency specialist that scans manifests, lockfiles, and advisory databases for vulnerabilities, staleness, and license risks."
+description: Audit dependency vulnerabilities, staleness, and license risk read-only.
 tools: Read, Grep, Glob, Bash
 model: inherit
 ---

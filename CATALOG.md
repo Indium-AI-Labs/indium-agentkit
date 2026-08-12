@@ -54,7 +54,7 @@ python scripts/list_content.py --format markdown
 | subagent | `compliance-auditor` | Read-only compliance specialist that audits code, data flows, PII redaction, encryption, and audit logs against compliance control standards. |
 | subagent | `data-engineer` | Audit data pipelines, models, quality, and governance read-only. |
 | subagent | `database-architect` | Analyze schemas and propose safe, verified migration plans. |
-| subagent | `dependency-auditor` | Read-only dependency specialist that scans manifests, lockfiles, and advisory databases for vulnerabilities, staleness, and license risks. |
+| subagent | `dependency-auditor` | Audit dependency vulnerabilities, staleness, and license risk read-only. |
 | subagent | `doc-writer` | Read-only documentation specialist that analyzes code, tests, and history to draft accurate project documentation. |
 | subagent | `estimator` | Read-only estimation specialist that analyzes scope, complexity, dependencies, and risk to produce effort assessments. |
 | subagent | `explorer` | Read-only codebase explorer that maps relevant files, control flow, conventions, and uncertainties for a focused task. |
