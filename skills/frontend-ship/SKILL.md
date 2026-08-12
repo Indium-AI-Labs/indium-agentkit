@@ -13,7 +13,7 @@ The default target stack is **Next.js App Router (React Server Components & Clie
 
 ## 1. Required I/O Context Schemas
 
-The orchestrator must supply the following JSON-RPC context manifest before invoking this skill. If any required property (`component_spec` or `design_system_context`) is missing, the agent **must abort execution immediately**.
+The orchestrator must supply the following JSON-RPC context manifest before invoking this skill. If any required property (`component_spec` or `design_system_context`) is missing or malformed, the agent **must abort execution immediately**.
 
 `interface_contract` is **optional**. When omitted, the skill operates in **Pure UI Design / Presentational Mode**, rendering components with typed props and mock data.
 
@@ -63,16 +63,18 @@ Follow this exact sequential protocol. Do not skip steps or alter execution orde
 
 ### Step 1: Context Manifest & Contract Ingestion
 1. Read the provided `FrontendShipContextManifest` JSON payload.
-2. Verify `component_spec` and `design_system_context`.
+2. Validate that `component_spec` (`feature_name`, `target_route`, `rendering_mode`) and `design_system_context` (`aesthetic_mode`, `token_source`) are fully declared. If missing, output missing fields and **ABORT**.
 3. Check if `interface_contract` is present:
    - **Present**: Component operates in API Integration Mode (fetching from `api_endpoint`).
    - **Omitted**: Component operates in Pure UI Design Mode (rendering via typed props and realistic mock data).
 
 ### Step 2: Component Topology & Directory Scaffolding
 1. Inspect `package.json` to confirm framework conventions (Next.js App Router vs Page Router, Vite, etc.).
-2. Execute scaffolding to isolate component modules:
+2. Define dynamic environment variables and execute process-scoped scaffolding:
    ```bash
-   mkdir -p components/ui src/app/[target_route] tests/e2e
+   TARGET_ROUTE="<target_route>"
+   FEATURE_NAME="<feature_name>"
+   mkdir -p "components/ui/${FEATURE_NAME}" "src/app${TARGET_ROUTE}" "tests/e2e/${FEATURE_NAME}"
    ```
 3. Establish Server Component (RSC) vs Client Component (`'use client'`) boundaries:
    - Keep data fetching and server secrets inside RSC modules.
@@ -194,7 +196,6 @@ export function ExpressiveFeatureContainer({ apiEndpoint, authToken, initialData
   const retryButtonRef = useRef<HTMLButtonElement>(null);
 
   const fetchData = async () => {
-    // If no API endpoint is passed, operate in Pure UI Design Mode with mock data
     if (!apiEndpoint) {
       if (initialData && initialData.length > 0) {
         setData(initialData);
@@ -393,14 +394,17 @@ $$\text{Initial Bundle Size} = \sum \text{JS Client Chunks} < 50\text{KB (gzip)}
 
 ## 7. Atomic Failure Recovery & Rollback Handler
 
-If any verification command in Step 6 (`npx tsc`, `npm run lint`, `npm run test`, `npx playwright test`) fails and cannot be resolved within 2 iterations, the agent **must execute atomic rollback**:
+If any verification command in Step 6 (`npx tsc`, `npm run lint`, `npm run test`, `npx playwright test`) fails and cannot be resolved within 2 iterations, the agent **must execute atomic rollback strictly scoped to the target feature path**:
 
 ```bash
-# Revert all modified component and test files in target route
-git checkout -- components/ui/ src/app/ tests/e2e/
+TARGET_ROUTE="<target_route>"
+FEATURE_NAME="<feature_name>"
 
-# Clean up untracked temporary scaffolded files
-git clean -fd components/ui/ src/app/ tests/e2e/
+# Revert modified component files strictly scoped to target paths
+git checkout -- "components/ui/${FEATURE_NAME}" "src/app${TARGET_ROUTE}" "tests/e2e/${FEATURE_NAME}" 2>/dev/null
+
+# Clean up untracked temporary scaffolded files strictly in target directories
+git clean -fd "components/ui/${FEATURE_NAME}" "src/app${TARGET_ROUTE}" "tests/e2e/${FEATURE_NAME}" 2>/dev/null
 ```
 
 After executing rollback, output the exact error trace and state failure causes.
