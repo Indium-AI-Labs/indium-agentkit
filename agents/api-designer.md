@@ -1,6 +1,6 @@
 ---
 name: api-designer
-description: "Read-only API design specialist that analyzes requirements, existing conventions, and data models to propose typed contract designs."
+description: Design typed API contracts from requirements without editing code.
 tools: Read, Grep, Glob, Bash
 model: inherit
 ---
