@@ -32,7 +32,7 @@ The skill supports **two invocation modes**:
       "required": ["feature_name", "target_route", "rendering_mode"],
       "properties": {
         "feature_name": { "type": "string", "pattern": "^[a-z0-9-]+$" },
-        "target_route": { "type": "string", "pattern": "^/[a-zA-Z0-9/_.\\[\\]()-]*$" },
+        "target_route": { "type": "string", "pattern": "^/(?!.*(?:^|/)\\.\\.?(?:/|$))[a-zA-Z0-9/_.\\[\\]()-]+$" },
         "rendering_mode": { "type": "string", "enum": ["rsc_with_client_boundary", "client_only", "server_only"] }
       }
     },
@@ -58,10 +58,11 @@ The skill supports **two invocation modes**:
 }
 ```
 
-### Automatic Natural Language Inference Rules
-If no raw JSON payload is provided, apply these defaults:
+### Automatic Natural Language Inference & Path Traversal Validation Rules
+If no raw JSON payload is provided, apply these defaults and safety checks:
 - **`feature_name`**: Extracted from prompt or derived from target route (e.g. `/profile` $\rightarrow$ `user-profile`).
 - **`target_route`**: Extracted from prompt URL or defaults to `/components/<feature_name>`.
+- **Path Traversal Protection**: `target_route` MUST NOT contain path traversal segments (`.` or `..`). The agent must normalize paths and **ABORT execution immediately** if traversal attempt is detected.
 - **`rendering_mode`**: Defaults to `rsc_with_client_boundary`.
 - **`aesthetic_mode`**: Inferred from prompt keywords (`glassmorphic`, `minimalist`, `expressive`, `spatial_3d`). Defaults to `glassmorphic`.
 - **`token_source`**: Detects local `styles/globals.css`, `app/globals.css`, or creates CSS custom properties in `components/ui/${FEATURE_NAME}/styles.css`.
@@ -73,7 +74,7 @@ If no raw JSON payload is provided, apply these defaults:
 Follow this exact sequential protocol. Do not skip steps or alter execution ordering.
 
 ### Step 1: Context Ingestion & Parameter Resolution
-1. Check if raw `FrontendShipContextManifest` JSON is provided.
+1. Check if raw `FrontendShipContextManifest` JSON is provided. Validate `target_route` for zero traversal segments (`.` or `..`).
 2. If JSON is missing, parse the user's natural language request and apply the **Automatic Natural Language Inference Rules** to build the parameter context in memory.
 3. Check if `interface_contract` is present:
    - **Present**: Component operates in API Integration Mode (fetching from `api_endpoint`).
@@ -81,11 +82,19 @@ Follow this exact sequential protocol. Do not skip steps or alter execution orde
 
 ### Step 2: Component Topology & Directory Scaffolding
 1. Inspect `package.json` to confirm framework conventions (Next.js App Router vs Page Router, Vite, etc.).
-2. Define dynamic environment variables and execute process-scoped scaffolding:
+2. Resolve the active App Router root dynamically (`src/app` vs `app`) before scaffolding:
    ```bash
+   if [ -d "src/app" ]; then
+     APP_ROOT="src/app"
+   elif [ -d "app" ]; then
+     APP_ROOT="app"
+   else
+     APP_ROOT="src/app"
+   fi
+
    TARGET_ROUTE="<target_route>"
    FEATURE_NAME="<feature_name>"
-   mkdir -p "components/ui/${FEATURE_NAME}" "src/app${TARGET_ROUTE}" "tests/e2e/${FEATURE_NAME}"
+   mkdir -p "components/ui/${FEATURE_NAME}" "${APP_ROOT}${TARGET_ROUTE}" "tests/e2e/${FEATURE_NAME}"
    ```
 3. Establish Server Component (RSC) vs Client Component (`'use client'`) boundaries:
    - Keep data fetching and server secrets inside RSC modules.
@@ -97,7 +106,7 @@ Follow this exact sequential protocol. Do not skip steps or alter execution orde
 ```css
 /* Core Visual Design Tokens Contract */
 :root {
-  /* 1. Surface & Color System (HSL Curated) */
+  /* 1. Surface & Color System (HSL Curated - WCAG AAA Compliant >= 7:1) */
   --color-bg-base: hsl(222, 47%, 10%);
   --color-surface-card: hsl(217, 33%, 15%);
   --color-surface-hover: hsl(217, 33%, 20%);
@@ -105,8 +114,8 @@ Follow this exact sequential protocol. Do not skip steps or alter execution orde
   --color-border-hairline: rgba(255, 255, 255, 0.08);
   --color-border-subtle: hsl(217, 24%, 27%);
   --color-text-primary: hsl(210, 40%, 98%);
-  --color-text-secondary: hsl(215, 20%, 65%);
-  --color-text-muted: hsl(215, 15%, 45%);
+  --color-text-secondary: hsl(215, 25%, 82%);
+  --color-text-muted: hsl(215, 20%, 78%); /* WCAG AAA >= 7:1 ratio against bg-base */
 
   /* 2. Expressive Brand & Aurora Glow Gradients */
   --color-brand-primary: hsl(210, 100%, 56%);
@@ -171,10 +180,10 @@ Implement explicit, observable UI views for all 7 mandatory states:
 3. Add live region status updates (`aria-live="polite"`).
 
 ### Step 6: Verification, Type Audit & Test Execution
-1. Run static analysis and type checks: `npx tsc --noEmit`.
+1. Run static analysis and type checks: `npx --no-install tsc --noEmit`.
 2. Run linter: `npm run lint`.
-3. Execute unit/integration tests: `npm run test` or `npx vitest run`.
-4. Execute Playwright E2E seam assertions: `npx playwright test`.
+3. Execute unit/integration tests: `npm run test` or `npx --no-install vitest run`.
+4. Execute Playwright E2E browser seam assertions: `npx --no-install playwright test`.
 
 ---
 
@@ -206,62 +215,72 @@ export function ExpressiveFeatureContainer({ apiEndpoint, authToken, initialData
   const [errorMessage, setErrorMessage] = useState<string>('');
   const retryButtonRef = useRef<HTMLButtonElement>(null);
 
-  const fetchData = async () => {
-    if (!apiEndpoint) {
-      if (initialData && initialData.length > 0) {
-        setData(initialData);
-        setViewState('SUCCESS');
-      } else {
-        setData([
-          { id: '1', title: 'Aurora Visual Engine', category: 'Design', metric: '60 FPS' },
-          { id: '2', title: 'Glassmorphic Card Depth', category: 'Aesthetic', metric: '100%' },
-        ]);
-        setViewState('SUCCESS');
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const fetchData = async () => {
+      if (!apiEndpoint) {
+        if (initialData && initialData.length > 0) {
+          setData(initialData);
+          setViewState('SUCCESS');
+        } else {
+          setData([
+            { id: '1', title: 'Aurora Visual Engine', category: 'Design', metric: '60 FPS' },
+            { id: '2', title: 'Glassmorphic Card Depth', category: 'Aesthetic', metric: '100%' },
+          ]);
+          setViewState('SUCCESS');
+        }
+        return;
       }
-      return;
-    }
 
-    if (!authToken) {
-      setViewState('PERMISSION_DENIED');
-      return;
-    }
-
-    setViewState('LOADING');
-    try {
-      const response = await fetch(apiEndpoint, {
-        headers: {
-          Authorization: `Bearer ${authToken}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (response.status === 401 || response.status === 403) {
+      if (!authToken) {
         setViewState('PERMISSION_DENIED');
         return;
       }
 
-      if (!response.ok) {
-        throw new Error(`Server responded with status ${response.status}`);
-      }
+      setViewState('LOADING');
+      try {
+        const response = await fetch(apiEndpoint, {
+          signal: controller.signal,
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+            'Content-Type': 'application/json',
+          },
+        });
 
-      const result: DataRecord[] = await response.json();
-      if (!Array.isArray(result) || result.length === 0) {
-        setData([]);
-        setViewState('EMPTY');
-      } else {
-        setData(result);
-        setViewState('SUCCESS');
-      }
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'An unexpected error occurred.';
-      setErrorMessage(message);
-      setViewState('ERROR');
-    }
-  };
+        if (response.status === 401 || response.status === 403) {
+          setViewState('PERMISSION_DENIED');
+          return;
+        }
 
-  useEffect(() => {
+        if (!response.ok) {
+          throw new Error(`Server responded with status ${response.status}`);
+        }
+
+        const result: DataRecord[] = await response.json();
+        if (!Array.isArray(result) || result.length === 0) {
+          setData([]);
+          setViewState('EMPTY');
+        } else {
+          setData(result);
+          setViewState('SUCCESS');
+        }
+      } catch (err: unknown) {
+        if (err instanceof Error && err.name === 'AbortError') {
+          return;
+        }
+        const message = err instanceof Error ? err.message : 'An unexpected error occurred.';
+        setErrorMessage(message);
+        setViewState('ERROR');
+      }
+    };
+
     fetchData();
-  }, [apiEndpoint, authToken]);
+
+    return () => {
+      controller.abort();
+    };
+  }, [apiEndpoint, authToken, initialData]);
 
   useEffect(() => {
     if (viewState === 'ERROR' && retryButtonRef.current) {
@@ -274,7 +293,7 @@ export function ExpressiveFeatureContainer({ apiEndpoint, authToken, initialData
       <div className="p-6">
         {viewState === 'INITIAL' && (
           <div className="state-view state-idle">
-            <p className="text-muted">Initializing interactive view...</p>
+            <p className="text-secondary">Initializing interactive view...</p>
           </div>
         )}
 
@@ -288,26 +307,25 @@ export function ExpressiveFeatureContainer({ apiEndpoint, authToken, initialData
         {viewState === 'PERMISSION_DENIED' && (
           <div className="state-view state-denied" role="alert">
             <h3>Access Restricted</h3>
-            <p>Authentication token required to render this dataset.</p>
+            <p className="text-secondary">Authentication token required to render this dataset.</p>
           </div>
         )}
 
         {viewState === 'EMPTY' && (
           <div className="state-view state-empty">
             <h3>No Records Available</h3>
-            <p>Your filter returned zero records. Create a record to begin.</p>
+            <p className="text-secondary">Your filter returned zero records. Create a record to begin.</p>
           </div>
         )}
 
         {viewState === 'ERROR' && (
           <div className="state-view state-error" role="alert">
             <h3>Unable to Sync View</h3>
-            <p>{errorMessage}</p>
+            <p className="text-secondary">{errorMessage}</p>
             <button
               ref={retryButtonRef}
               onClick={() => {
                 setViewState('RETRY');
-                fetchData();
               }}
               className="btn-primary"
             >
@@ -406,17 +424,26 @@ $$\text{Initial Bundle Size} = \sum \text{JS Client Chunks} < 50\text{KB (gzip)}
 
 ## 7. Atomic Failure Recovery & Rollback Handler
 
-If any verification command in Step 6 (`npx tsc`, `npm run lint`, `npm run test`, `npx playwright test`) fails and cannot be resolved within 2 iterations, the agent **must execute atomic rollback strictly scoped to the target feature path**:
+If any verification command in Step 6 (`npx --no-install tsc`, `npm run lint`, `npm run test`, `npx --no-install playwright test`) fails and cannot be resolved within 2 iterations, the agent **must execute atomic rollback strictly scoped to the target feature path**:
 
 ```bash
+# Resolve dynamic App Router root
+if [ -d "src/app" ]; then
+  APP_ROOT="src/app"
+elif [ -d "app" ]; then
+  APP_ROOT="app"
+else
+  APP_ROOT="src/app"
+fi
+
 TARGET_ROUTE="<target_route>"
 FEATURE_NAME="<feature_name>"
 
 # Revert modified component files strictly scoped to target paths
-git checkout -- "components/ui/${FEATURE_NAME}" "src/app${TARGET_ROUTE}" "tests/e2e/${FEATURE_NAME}" 2>/dev/null
+git checkout -- "components/ui/${FEATURE_NAME}" "${APP_ROOT}${TARGET_ROUTE}" "tests/e2e/${FEATURE_NAME}" 2>/dev/null
 
 # Clean up untracked temporary scaffolded files strictly in target directories
-git clean -fd "components/ui/${FEATURE_NAME}" "src/app${TARGET_ROUTE}" "tests/e2e/${FEATURE_NAME}" 2>/dev/null
+git clean -fd "components/ui/${FEATURE_NAME}" "${APP_ROOT}${TARGET_ROUTE}" "tests/e2e/${FEATURE_NAME}" 2>/dev/null
 ```
 
 After executing rollback, output the exact error trace and state failure causes.
@@ -425,11 +452,11 @@ After executing rollback, output the exact error trace and state failure causes.
 
 ## 8. Verification Plan & Node.js CI Toolchain Commands
 
-Execute the following frontend toolchain commands to verify the UI code:
+Execute the following frontend toolchain commands using project-local package runners to verify the UI code:
 
 ```bash
 # 1. Type check TypeScript components and contracts
-npx tsc --noEmit
+npx --no-install tsc --noEmit
 
 # 2. Execute code linter
 npm run lint
@@ -438,5 +465,5 @@ npm run lint
 npm run test
 
 # 4. Execute Playwright E2E browser seam assertions
-npx playwright test
+npx --no-install playwright test
 ```

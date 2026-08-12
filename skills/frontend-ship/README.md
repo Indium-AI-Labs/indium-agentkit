@@ -78,7 +78,7 @@ To verify generated frontend components and UI seams:
 
 ```bash
 # 1. Type check TypeScript components
-npx tsc --noEmit
+npx --no-install tsc --noEmit
 
 # 2. Run code linter
 npm run lint
@@ -87,5 +87,5 @@ npm run lint
 npm run test
 
 # 4. Run Playwright E2E browser seam assertions
-npx playwright test
+npx --no-install playwright test
 ```
