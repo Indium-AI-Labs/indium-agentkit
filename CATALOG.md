@@ -63,7 +63,7 @@ python scripts/list_content.py --format markdown
 | subagent | `llm-evaluator` | Read-only LLM evaluation specialist that inspects prompt definitions, RAG retrieval logic, benchmark datasets, and guardrails. |
 | subagent | `migration-planner` | Read-only migration planner that inventories compatibility impact, rollout stages, rollback paths, and verification for schema, API, configuration, or file-format changes. |
 | subagent | `mobile-specialist` | Read-only mobile specialist that inspects build configurations, permission manifests, native bridges, bundle sizes, and store submission readiness. |
-| subagent | `performance-profiler` | Read-only performance specialist that chooses approved profiling methods, compares evidence against a baseline, and reports bottlenecks. |
+| subagent | `performance-profiler` | Measure performance bottlenecks against a reproducible baseline. |
 | subagent | `release-engineer` | Prepare release plans and assess deployment readiness. |
 | subagent | `resilience-reviewer` | Read-only resilience specialist that analyzes circuit breakers, retry backoffs, timeout configurations, connection pools, and fallbacks. |
 | subagent | `reviewer` | Read-only independent reviewer for a completed diff, branch, or pull request who reports actionable findings with evidence. |
