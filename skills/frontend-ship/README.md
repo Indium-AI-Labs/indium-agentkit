@@ -9,7 +9,7 @@ The **`frontend-ship`** skill provides AI coding agents (Claude Code, Cursor, Co
 To install this skill into any project repository in under 2 seconds, run:
 
 ```bash
-npx indium-agentkit add frontend-ship
+npx @indium-ai-labs/agentkit add frontend-ship
 ```
 *Automatically configures Cursor rules (`.cursor/rules/frontend-ship.mdc`), Claude Code (`CLAUDE.md`), and Windsurf / Copilot configurations.*
 
