@@ -1,0 +1,141 @@
+"""Unit tests for scripts/validate_rbac_schema.py."""
+
+from __future__ import annotations
+
+import io
+import json
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+
+from scripts.validate_rbac_schema import (
+    extract_frontmatter_bounded,
+    main,
+    validate_file_rbac,
+    validate_catalog,
+)
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+
+
+class ValidateRBACSchemaTests(unittest.TestCase):
+
+    def test_extract_frontmatter_bounded(self) -> None:
+        with tempfile.NamedTemporaryFile("w", encoding="utf-8", delete=False) as handle:
+            handle.write("---\nname: test-agent\ndescription: test\n---\n\n# Header\n" + "line\n" * 200)
+            temp_path = Path(handle.name)
+
+        try:
+            raw_yaml, error = extract_frontmatter_bounded(temp_path)
+            self.assertIsNone(error)
+            self.assertEqual(raw_yaml, "name: test-agent\ndescription: test\n")
+        finally:
+            temp_path.unlink(missing_ok=True)
+
+    def test_skill_schema_routing(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            skill_dir = temp_path / "skills" / "demo-skill"
+            skill_dir.mkdir(parents=True)
+            skill_file = skill_dir / "SKILL.md"
+            skill_file.write_text(
+                "---\nname: demo-skill\ndescription: A demo skill for testing.\n---\n\n# Demo Skill\n",
+                encoding="utf-8",
+            )
+
+            violations, scanned = validate_catalog(temp_path)
+            self.assertEqual(scanned, 1)
+            self.assertEqual(violations, [])
+
+    def test_skill_directory_mismatch_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            skill_dir = temp_path / "skills" / "demo-skill"
+            skill_dir.mkdir(parents=True)
+            skill_file = skill_dir / "SKILL.md"
+            skill_file.write_text(
+                "---\nname: mismatched-name\ndescription: Mismatched skill name.\n---\n\n# Mismatched\n",
+                encoding="utf-8",
+            )
+
+            violations, scanned = validate_catalog(temp_path)
+            self.assertEqual(scanned, 1)
+            self.assertEqual(len(violations), 1)
+            self.assertIn("must match directory name", violations[0]["message"])
+
+    def test_readonly_agent_with_write_tool_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            agents_dir = temp_path / "agents"
+            agents_dir.mkdir()
+            bad_agent = agents_dir / "bad-agent.md"
+            bad_agent.write_text(
+                "---\nname: bad-agent\ndescription: test agent\ndomain: core-engineering\npermission_mode: read-only\ntools:\n  - Read\n  - Grep\n  - Edit\n  - Write\nmodel_routing:\n  primary: inherit\n  fallback: inherit\n  temperature: 0.0\napi_version: 1.0.0\n---\n\n# Bad Agent\n",
+                encoding="utf-8",
+            )
+
+            violations, scanned = validate_catalog(temp_path)
+            self.assertEqual(scanned, 1)
+            self.assertEqual(len(violations), 1)
+            self.assertEqual(violations[0]["error_type"], "PrivilegeEscalationError")
+            self.assertIn("edit", violations[0]["prohibited_tools"])
+            self.assertIn("write", violations[0]["prohibited_tools"])
+
+    def test_valid_readonly_agent_passes(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            agents_dir = temp_path / "agents"
+            agents_dir.mkdir()
+            good_agent = agents_dir / "agent-orchestrator.md"
+            good_agent.write_text(
+                "---\nname: agent-orchestrator\ndescription: Topology inspector\ndomain: ai-ml\npermission_mode: read-only\ntools:\n  - Read\n  - Grep\n  - Glob\n  - Bash\nmodel_routing:\n  primary: inherit\n  fallback: inherit\n  temperature: 0.0\napi_version: 1.0.0\n---\n\n# Good Agent\n",
+                encoding="utf-8",
+            )
+
+            violations, scanned = validate_catalog(temp_path)
+            self.assertEqual(scanned, 1)
+            self.assertEqual(violations, [])
+
+    def test_malformed_yaml_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            agents_dir = temp_path / "agents"
+            agents_dir.mkdir()
+            bad_yaml = agents_dir / "bad-yaml.md"
+            bad_yaml.write_text(
+                "---\nname: bad-yaml\ntools: [Read, Grep: bad\n---\n\n# Bad YAML\n",
+                encoding="utf-8",
+            )
+
+            violations, scanned = validate_catalog(temp_path)
+            self.assertEqual(scanned, 1)
+            self.assertEqual(len(violations), 1)
+            self.assertEqual(violations[0]["error_type"], "ParseError")
+
+    def test_pydantic_validation_error(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            agents_dir = temp_path / "agents"
+            agents_dir.mkdir()
+            invalid_agent = agents_dir / "invalid-agent.md"
+            invalid_agent.write_text(
+                "---\ndescription: missing name field\ntools: Read\n---\n\n# Invalid Agent\n",
+                encoding="utf-8",
+            )
+
+            violations, scanned = validate_catalog(temp_path)
+            self.assertEqual(scanned, 1)
+            self.assertEqual(len(violations), 1)
+            self.assertEqual(violations[0]["error_type"], "SchemaValidationError")
+
+    def test_invalid_target_dir_returns_error(self) -> None:
+        non_existent = REPO_ROOT / "non_existent_directory_12345"
+        violations, scanned = validate_catalog(non_existent)
+        self.assertEqual(scanned, 0)
+        self.assertEqual(len(violations), 1)
+        self.assertEqual(violations[0]["error_type"], "DirectoryResolutionError")
+
+
+if __name__ == "__main__":
+    unittest.main()

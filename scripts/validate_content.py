@@ -131,7 +131,7 @@ def validate_repository(root: Path) -> list[tuple[Path, str]]:
         "templates/subagent.md",
         "scripts/generate_catalog.py", "scripts/diff_catalog.py",
         "scripts/sync_vendor_rules.py", "scripts/export_context_bundle.py",
-        "scripts/verify_skill_overlap.py",
+        "scripts/verify_skill_overlap.py", "scripts/validate_rbac_schema.py",
         "templates/handoffs/feature-brief.md",
         "templates/handoffs/api-contract.md",
         "templates/handoffs/data-migration-plan.md",
