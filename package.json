@@ -1,0 +1,32 @@
+{
+  "name": "indium-agentkit",
+  "version": "1.0.0",
+  "description": "Portable AI coding-agent skills, subagents, and project-context templates.",
+  "main": "scripts/cli.js",
+  "bin": {
+    "indium-agentkit": "scripts/cli.js"
+  },
+  "files": [
+    "skills",
+    "agents",
+    "scripts",
+    "templates",
+    "CATALOG.md",
+    "README.md"
+  ],
+  "scripts": {
+    "test": "python3 -m unittest discover -s tests -v",
+    "lint": "python3 scripts/validate_content.py"
+  },
+  "keywords": [
+    "ai",
+    "coding-agent",
+    "cursor-rules",
+    "claude-code",
+    "subagents",
+    "skills",
+    "agentkit"
+  ],
+  "author": "Indium AI Labs",
+  "license": "MIT"
+}
