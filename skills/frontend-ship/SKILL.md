@@ -381,7 +381,7 @@ test.describe('ExpressiveFeatureContainer E2E & Seam Assertions', () => {
 
 ## 5. Core Web Vitals & SLA Performance Mathematics
 
-$$LCP = \min(\{t_{\text{load}}(e) \mid e \in \text{DOM Elements}\}) < 1.2\text{s}$$
+$$LCP = t_{\text{render}}(\arg\max_{e \in \text{Viewport}} (\text{Area}(e))) \le 1.2\text{s}$$
 
 $$CLS = \sum_{i} (\text{Impact Fraction}_i \times \text{Distance Fraction}_i) < 0.05$$
 
