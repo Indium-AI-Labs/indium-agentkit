@@ -169,9 +169,9 @@ Implement explicit, observable UI views for all 7 mandatory states:
 1. `INITIAL`: Baseline idle component state.
 2. `LOADING`: Skeleton fallback layout with `aria-busy="true"`.
 3. `SUCCESS`: Interactive data view with semantic HTML landmarks.
-4. `EMPTY`: Actionable zero-data fallback state.
+4. `EMPTY`: Actionable zero-data fallback state with action buttons.
 5. `ERROR`: Non-sensitive, user-actionable error state with recovery controls.
-6. `RETRY`: Deterministic connection retry backoff.
+6. `RETRY`: Observable connection retry state with deterministic 1000ms backoff.
 7. `PERMISSION_DENIED`: 403 / Unauthenticated fallback view.
 
 ### Step 5: WCAG 2.1 AAA Accessibility & Focus Control
@@ -215,67 +215,66 @@ export function ExpressiveFeatureContainer({ apiEndpoint, authToken, initialData
   const [errorMessage, setErrorMessage] = useState<string>('');
   const retryButtonRef = useRef<HTMLButtonElement>(null);
 
-  useEffect(() => {
-    const controller = new AbortController();
-
-    const fetchData = async () => {
-      if (!apiEndpoint) {
-        if (initialData && initialData.length > 0) {
-          setData(initialData);
-          setViewState('SUCCESS');
-        } else {
-          setData([
-            { id: '1', title: 'Aurora Visual Engine', category: 'Design', metric: '60 FPS' },
-            { id: '2', title: 'Glassmorphic Card Depth', category: 'Aesthetic', metric: '100%' },
-          ]);
-          setViewState('SUCCESS');
-        }
-        return;
+  const fetchData = async (signal?: AbortSignal) => {
+    if (!apiEndpoint) {
+      if (initialData && initialData.length > 0) {
+        setData(initialData);
+        setViewState('SUCCESS');
+      } else {
+        setData([
+          { id: '1', title: 'Aurora Visual Engine', category: 'Design', metric: '60 FPS' },
+          { id: '2', title: 'Glassmorphic Card Depth', category: 'Aesthetic', metric: '100%' },
+        ]);
+        setViewState('SUCCESS');
       }
+      return;
+    }
 
-      if (!authToken) {
+    if (!authToken) {
+      setViewState('PERMISSION_DENIED');
+      return;
+    }
+
+    setViewState('LOADING');
+    try {
+      const response = await fetch(apiEndpoint, {
+        signal,
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.status === 401 || response.status === 403) {
         setViewState('PERMISSION_DENIED');
         return;
       }
 
-      setViewState('LOADING');
-      try {
-        const response = await fetch(apiEndpoint, {
-          signal: controller.signal,
-          headers: {
-            Authorization: `Bearer ${authToken}`,
-            'Content-Type': 'application/json',
-          },
-        });
-
-        if (response.status === 401 || response.status === 403) {
-          setViewState('PERMISSION_DENIED');
-          return;
-        }
-
-        if (!response.ok) {
-          throw new Error(`Server responded with status ${response.status}`);
-        }
-
-        const result: DataRecord[] = await response.json();
-        if (!Array.isArray(result) || result.length === 0) {
-          setData([]);
-          setViewState('EMPTY');
-        } else {
-          setData(result);
-          setViewState('SUCCESS');
-        }
-      } catch (err: unknown) {
-        if (err instanceof Error && err.name === 'AbortError') {
-          return;
-        }
-        const message = err instanceof Error ? err.message : 'An unexpected error occurred.';
-        setErrorMessage(message);
-        setViewState('ERROR');
+      if (!response.ok) {
+        throw new Error(`Server responded with status ${response.status}`);
       }
-    };
 
-    fetchData();
+      const result: DataRecord[] = await response.json();
+      if (!Array.isArray(result) || result.length === 0) {
+        setData([]);
+        setViewState('EMPTY');
+      } else {
+        setData(result);
+        setViewState('SUCCESS');
+      }
+    } catch (err: unknown) {
+      if (err instanceof Error && err.name === 'AbortError') {
+        return;
+      }
+      const message = err instanceof Error ? err.message : 'An unexpected error occurred.';
+      setErrorMessage(message);
+      setViewState('ERROR');
+    }
+  };
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchData(controller.signal);
 
     return () => {
       controller.abort();
@@ -288,8 +287,15 @@ export function ExpressiveFeatureContainer({ apiEndpoint, authToken, initialData
     }
   }, [viewState]);
 
+  const handleRetry = () => {
+    setViewState('RETRY');
+    setTimeout(() => {
+      fetchData();
+    }, 1000);
+  };
+
   return (
-    <section className="glass-card" aria-live="polite" aria-busy={viewState === 'LOADING'}>
+    <section className="glass-card" aria-live="polite" aria-busy={viewState === 'LOADING' || viewState === 'RETRY'}>
       <div className="p-6">
         {viewState === 'INITIAL' && (
           <div className="state-view state-idle">
@@ -304,6 +310,13 @@ export function ExpressiveFeatureContainer({ apiEndpoint, authToken, initialData
           </div>
         )}
 
+        {viewState === 'RETRY' && (
+          <div className="state-view state-retry" role="status" aria-label="Retrying connection">
+            <div className="skeleton-line header-skeleton" />
+            <p className="text-secondary">Re-establishing connection... (Attempting retry in 1s)</p>
+          </div>
+        )}
+
         {viewState === 'PERMISSION_DENIED' && (
           <div className="state-view state-denied" role="alert">
             <h3>Access Restricted</h3>
@@ -314,7 +327,10 @@ export function ExpressiveFeatureContainer({ apiEndpoint, authToken, initialData
         {viewState === 'EMPTY' && (
           <div className="state-view state-empty">
             <h3>No Records Available</h3>
-            <p className="text-secondary">Your filter returned zero records. Create a record to begin.</p>
+            <p className="text-secondary">Your filter returned zero records. Create a record or refresh to begin.</p>
+            <button onClick={() => fetchData()} className="btn-secondary">
+              Refresh Data
+            </button>
           </div>
         )}
 
@@ -324,9 +340,7 @@ export function ExpressiveFeatureContainer({ apiEndpoint, authToken, initialData
             <p className="text-secondary">{errorMessage}</p>
             <button
               ref={retryButtonRef}
-              onClick={() => {
-                setViewState('RETRY');
-              }}
+              onClick={handleRetry}
               className="btn-primary"
             >
               Retry Connection
@@ -413,7 +427,12 @@ $$\text{Initial Bundle Size} = \sum \text{JS Client Chunks} < 50\text{KB (gzip)}
 
 ### Operational Restrictions
 - **No Unapproved Dependencies**: Do **NOT** execute `npm install` or add third-party packages without explicit user authorization.
-- **Strict File Scope**: Modify only component files in the assigned target route directory. Do not alter root layout files (`app/layout.tsx`) or global configuration (`next.config.js`) unless instructed in the brief.
+- **Strict Allowlisted File Scope**: Restrict modifications strictly to the following output paths:
+  - `components/ui/${FEATURE_NAME}/*` (UI component code and scoped styles)
+  - `${APP_ROOT}${TARGET_ROUTE}/*` (Target route pages, layouts, and server handlers)
+  - `tests/e2e/${FEATURE_NAME}/*` (E2E Playwright seam assertions)
+  - Local global stylesheet declared in `token_source` (e.g. `app/globals.css` or `styles/globals.css`)
+  Do not alter root layout files (`app/layout.tsx`) or global configuration (`next.config.js`) unless explicitly instructed in the brief.
 
 ### Security Invariants
 - **Zero Credential Exposure**: Never expose private API keys (`STRIPE_SECRET_KEY`, `DATABASE_PASSWORD`) in client-side bundles or `NEXT_PUBLIC_` environment variables.
@@ -424,29 +443,21 @@ $$\text{Initial Bundle Size} = \sum \text{JS Client Chunks} < 50\text{KB (gzip)}
 
 ## 7. Atomic Failure Recovery & Rollback Handler
 
-If any verification command in Step 6 (`npx --no-install tsc`, `npm run lint`, `npm run test`, `npx --no-install playwright test`) fails and cannot be resolved within 2 iterations, the agent **must execute atomic rollback strictly scoped to the target feature path**:
+Before creating or modifying files, the agent must capture a baseline list of modified and untracked files. If any verification command in Step 6 fails and cannot be resolved within 2 iterations, the agent **must execute targeted rollback restricted ONLY to files created or modified during this run**:
 
 ```bash
-# Resolve dynamic App Router root
-if [ -d "src/app" ]; then
-  APP_ROOT="src/app"
-elif [ -d "app" ]; then
-  APP_ROOT="app"
-else
-  APP_ROOT="src/app"
+# Revert ONLY modified files tracked during this execution run
+if [ -n "${MODIFIED_FILES:-}" ]; then
+  git checkout -- ${MODIFIED_FILES} 2>/dev/null
 fi
 
-TARGET_ROUTE="<target_route>"
-FEATURE_NAME="<feature_name>"
-
-# Revert modified component files strictly scoped to target paths
-git checkout -- "components/ui/${FEATURE_NAME}" "${APP_ROOT}${TARGET_ROUTE}" "tests/e2e/${FEATURE_NAME}" 2>/dev/null
-
-# Clean up untracked temporary scaffolded files strictly in target directories
-git clean -fd "components/ui/${FEATURE_NAME}" "${APP_ROOT}${TARGET_ROUTE}" "tests/e2e/${FEATURE_NAME}" 2>/dev/null
+# Remove ONLY newly created untracked files from this execution run
+if [ -n "${CREATED_FILES:-}" ]; then
+  rm -rf ${CREATED_FILES} 2>/dev/null
+fi
 ```
 
-After executing rollback, output the exact error trace and state failure causes.
+After executing targeted rollback, output the exact error trace and state failure causes.
 
 ---
 
