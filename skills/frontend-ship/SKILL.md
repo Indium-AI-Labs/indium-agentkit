@@ -32,7 +32,7 @@ The skill supports **two invocation modes**:
       "required": ["feature_name", "target_route", "rendering_mode"],
       "properties": {
         "feature_name": { "type": "string", "pattern": "^[a-z0-9-]+$" },
-        "target_route": { "type": "string", "pattern": "^/[a-zA-Z0-9/_-]*$" },
+        "target_route": { "type": "string", "pattern": "^/[a-zA-Z0-9/_.\\[\\]()-]*$" },
         "rendering_mode": { "type": "string", "enum": ["rsc_with_client_boundary", "client_only", "server_only"] }
       }
     },
