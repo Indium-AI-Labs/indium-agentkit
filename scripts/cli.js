@@ -35,11 +35,11 @@ function parseTargetIde(args, projectPath) {
 }
 
 if (command === 'help' || command === '--help' || command === '-h') {
-  console.log(`\x1b[36m@indium-ai-labs/agentkit CLI v1.0.0\x1b[0m`);
+  console.log(`\x1b[36mindium-ai-agentkit CLI v1.0.0\x1b[0m`);
   console.log(`Portable AI coding-agent skills, subagents, and templates.\n`);
   console.log(`Usage:`);
-  console.log(`  npx @indium-ai-labs/agentkit add [name] [--target=<ide>]`);
-  console.log(`  npx @indium-ai-labs/agentkit install [--target=<ide>]\n`);
+  console.log(`  npx indium-ai-agentkit add [name] [--target=<ide>]`);
+  console.log(`  npx indium-ai-agentkit install [--target=<ide>]\n`);
   console.log(`Supported Target IDEs:`);
   console.log(`  --target=antigravity   Install for Antigravity IDE (.antigravity/skills)`);
   console.log(`  --target=gemini        Install for Gemini CLI (.gemini/skills)`);
@@ -49,8 +49,8 @@ if (command === 'help' || command === '--help' || command === '-h') {
   console.log(`  --target=codex         Install for Codex (.codex/skills)`);
   console.log(`  --target=all           Install for all supported IDEs (default)\n`);
   console.log(`Examples:`);
-  console.log(`  npx @indium-ai-labs/agentkit add frontend-ship --target=antigravity`);
-  console.log(`  npx @indium-ai-labs/agentkit add frontend-ship --target=opencode`);
+  console.log(`  npx indium-ai-agentkit add frontend-ship --target=antigravity`);
+  console.log(`  npx indium-ai-agentkit add frontend-ship --target=opencode`);
   process.exit(0);
 }
 
@@ -58,12 +58,12 @@ if (command === 'add' || command === 'install') {
   const targetItem = args[1] && !args[1].startsWith('-') ? args[1] : 'all';
   const targetIde = parseTargetIde(args, targetDir);
 
-  console.log(`\x1b[36m[@indium-ai-labs/agentkit]\x1b[0m Installing skills (${targetItem}) for target: \x1b[33m${targetIde}\x1b[0m...`);
+  console.log(`\x1b[36m[indium-ai-agentkit]\x1b[0m Installing skills (${targetItem}) for target: \x1b[33m${targetIde}\x1b[0m...`);
   try {
     const installScript = path.join(repoRoot, 'scripts', 'install.sh');
     if (fs.existsSync(installScript)) {
       execSync(`bash "${installScript}" "${targetDir}" "${targetIde}"`, { stdio: 'inherit' });
-      console.log(`\x1b[32m[@indium-ai-labs/agentkit]\x1b[0m Successfully installed skills (${targetItem}) for \x1b[33m${targetIde}\x1b[0m into ${targetDir}!`);
+      console.log(`\x1b[32m[indium-ai-agentkit]\x1b[0m Successfully installed skills (${targetItem}) for \x1b[33m${targetIde}\x1b[0m into ${targetDir}!`);
     } else {
       console.error(`\x1b[31m[error]\x1b[0m Installation script not found at ${installScript}`);
       process.exit(1);
@@ -73,6 +73,6 @@ if (command === 'add' || command === 'install') {
     process.exit(1);
   }
 } else {
-  console.log(`\x1b[36m@indium-ai-labs/agentkit CLI v1.0.0\x1b[0m`);
-  console.log(`Usage: npx @indium-ai-labs/agentkit add [name] [--target=<ide>]`);
+  console.log(`\x1b[36mindium-ai-agentkit CLI v1.0.0\x1b[0m`);
+  console.log(`Usage: npx indium-ai-agentkit add [name] [--target=<ide>]`);
 }
