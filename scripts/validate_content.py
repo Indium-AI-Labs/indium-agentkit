@@ -179,7 +179,7 @@ def validate_repository(root: Path) -> list[tuple[Path, str]]:
                 failures.append((entry, error))
 
     for path in sorted(root.rglob("*")):
-        if not path.is_file() or ".git" in path.parts or path.suffix.lower() not in TEXT_SUFFIXES:
+        if not path.is_file() or ".git" in path.parts or "node_modules" in path.parts or any(part.startswith(".") for part in path.relative_to(root).parts) or path.suffix.lower() not in TEXT_SUFFIXES:
             continue
         if path.suffix.lower() == ".md":
             for error in validate_local_links(root, path):

@@ -1,8 +1,3 @@
-# Security policy
+# Security Policy
 
-See [docs/security.md](docs/security.md) for content-review and safe-operation
-guidance.
-
-Report vulnerabilities through GitHub's private security-advisory flow for this
-repository. Do not include exploit details, credentials, or sensitive customer
-data in public issues.
+Please see [docs/security.md](docs/security.md) for full security policy guidelines and vulnerability reporting instructions.
