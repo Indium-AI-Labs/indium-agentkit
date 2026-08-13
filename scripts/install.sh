@@ -107,7 +107,13 @@ if [[ -n "${PROJECT_DIR}" ]]; then
   link_path "${TEMPLATE_AGENTS_FILE}" "${PROJECT_DIR}/AGENTS.md"
   link_path "${TEMPLATE_AGENTS_FILE}" "${PROJECT_DIR}/CLAUDE.md"
   link_collection "${SKILLS_DIR}" "${PROJECT_DIR}/.claude/skills" directory
+  link_collection "${SKILLS_DIR}" "${PROJECT_DIR}/.gemini/skills" directory
+  link_collection "${SKILLS_DIR}" "${PROJECT_DIR}/.antigravity/skills" directory
+  link_collection "${SKILLS_DIR}" "${PROJECT_DIR}/.codex/skills" directory
+  link_collection "${SKILLS_DIR}" "${PROJECT_DIR}/.opencode/skills" directory
   link_collection "${AGENTS_DIR}" "${PROJECT_DIR}/.claude/agents" file
+  link_collection "${AGENTS_DIR}" "${PROJECT_DIR}/.gemini/agents" file
+  link_collection "${AGENTS_DIR}" "${PROJECT_DIR}/.antigravity/agents" file
 
   if ! command -v python3 >/dev/null 2>&1; then
     printf 'error: Python 3 is required to build Cursor rules\n' >&2
