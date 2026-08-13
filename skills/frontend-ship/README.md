@@ -10,25 +10,25 @@ To install this skill into any project repository in under 2 seconds, run:
 
 ```bash
 # Auto-detect active IDE (Antigravity, Cursor, OpenCode, Claude Code)
-npx indium-ai-agentkit add frontend-ship
+npx @indium-ai-labs/agentkit add frontend-ship
 ```
 
 ### 🎯 Target Specific AI Editors & IDEs:
 ```bash
 # Antigravity IDE (.antigravity/skills)
-npx indium-ai-agentkit add frontend-ship --target=antigravity
+npx @indium-ai-labs/agentkit add frontend-ship --target=antigravity
 
 # OpenCode (.opencode/skills)
-npx indium-ai-agentkit add frontend-ship --target=opencode
+npx @indium-ai-labs/agentkit add frontend-ship --target=opencode
 
 # Cursor IDE (.cursor/rules/frontend-ship.mdc)
-npx indium-ai-agentkit add frontend-ship --target=cursor
+npx @indium-ai-labs/agentkit add frontend-ship --target=cursor
 
 # Claude Code (.claude/skills)
-npx indium-ai-agentkit add frontend-ship --target=claude
+npx @indium-ai-labs/agentkit add frontend-ship --target=claude
 
 # Gemini CLI (.gemini/skills)
-npx indium-ai-agentkit add frontend-ship --target=gemini
+npx @indium-ai-labs/agentkit add frontend-ship --target=gemini
 ```
 
 ---
