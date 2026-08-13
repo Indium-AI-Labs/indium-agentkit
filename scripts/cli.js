@@ -8,6 +8,7 @@ const args = process.argv.slice(2);
 const command = args[0] || 'install';
 const targetDir = process.cwd();
 const repoRoot = path.resolve(__dirname, '..');
+const isWindows = process.platform === 'win32';
 
 function parseTargetIde(args, projectPath) {
   for (let i = 0; i < args.length; i++) {
@@ -35,7 +36,7 @@ function parseTargetIde(args, projectPath) {
 }
 
 if (command === 'help' || command === '--help' || command === '-h') {
-  console.log(`\x1b[36m@indium-ai-labs/agentkit CLI v1.0.1\x1b[0m`);
+  console.log(`\x1b[36m@indium-ai-labs/agentkit CLI v1.0.2\x1b[0m`);
   console.log(`Portable AI coding-agent skills, subagents, and templates.\n`);
   console.log(`Usage:`);
   console.log(`  npx @indium-ai-labs/agentkit add [name] [--target=<ide>]`);
@@ -60,19 +61,30 @@ if (command === 'add' || command === 'install') {
 
   console.log(`\x1b[36m[@indium-ai-labs/agentkit]\x1b[0m Installing skills (${targetItem}) for target: \x1b[33m${targetIde}\x1b[0m...`);
   try {
-    const installScript = path.join(repoRoot, 'scripts', 'install.sh');
-    if (fs.existsSync(installScript)) {
-      execSync(`bash "${installScript}" "${targetDir}" "${targetIde}"`, { stdio: 'inherit' });
-      console.log(`\x1b[32m[@indium-ai-labs/agentkit]\x1b[0m Successfully installed skills (${targetItem}) for \x1b[33m${targetIde}\x1b[0m into ${targetDir}!`);
+    if (isWindows) {
+      const installScriptPs1 = path.join(repoRoot, 'scripts', 'install.ps1');
+      if (fs.existsSync(installScriptPs1)) {
+        execSync(`powershell -ExecutionPolicy Bypass -File "${installScriptPs1}" "${targetDir}" "${targetIde}"`, { stdio: 'inherit' });
+        console.log(`\x1b[32m[@indium-ai-labs/agentkit]\x1b[0m Successfully installed skills (${targetItem}) for \x1b[33m${targetIde}\x1b[0m into ${targetDir}!`);
+      } else {
+        console.error(`\x1b[31m[error]\x1b[0m PowerShell script not found at ${installScriptPs1}`);
+        process.exit(1);
+      }
     } else {
-      console.error(`\x1b[31m[error]\x1b[0m Installation script not found at ${installScript}`);
-      process.exit(1);
+      const installScriptSh = path.join(repoRoot, 'scripts', 'install.sh');
+      if (fs.existsSync(installScriptSh)) {
+        execSync(`bash "${installScriptSh}" "${targetDir}" "${targetIde}"`, { stdio: 'inherit' });
+        console.log(`\x1b[32m[@indium-ai-labs/agentkit]\x1b[0m Successfully installed skills (${targetItem}) for \x1b[33m${targetIde}\x1b[0m into ${targetDir}!`);
+      } else {
+        console.error(`\x1b[31m[error]\x1b[0m Installation script not found at ${installScriptSh}`);
+        process.exit(1);
+      }
     }
   } catch (err) {
     console.error(`\x1b[31m[error]\x1b[0m Failed to run installation:`, err.message);
     process.exit(1);
   }
 } else {
-  console.log(`\x1b[36m@indium-ai-labs/agentkit CLI v1.0.1\x1b[0m`);
+  console.log(`\x1b[36m@indium-ai-labs/agentkit CLI v1.0.2\x1b[0m`);
   console.log(`Usage: npx @indium-ai-labs/agentkit add [name] [--target=<ide>]`);
 }
