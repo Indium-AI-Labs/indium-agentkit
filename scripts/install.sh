@@ -8,18 +8,18 @@ SKILLS_DIR="${REPO_ROOT}/skills"
 AGENTS_DIR="${REPO_ROOT}/agents"
 TEMPLATE_AGENTS_FILE="${REPO_ROOT}/templates/AGENTS.md"
 PROJECT_DIR=""
+TARGET_IDE="all"
 
-if [[ $# -gt 1 ]]; then
-  printf 'error: expected at most one project directory argument\n' >&2
-  exit 2
-fi
-
-if [[ $# -eq 1 ]]; then
+if [[ $# -ge 1 && -n "$1" ]]; then
   if [[ ! -d "$1" ]]; then
     printf 'error: project directory does not exist: %s\n' "$1" >&2
     exit 2
   fi
   PROJECT_DIR="$(cd -- "$1" && pwd -P)"
+fi
+
+if [[ $# -ge 2 && -n "$2" ]]; then
+  TARGET_IDE="$2"
 fi
 
 link_path() {
@@ -106,15 +106,37 @@ link_collection "${AGENTS_DIR}" "${HOME}/.claude/agents" file
 if [[ -n "${PROJECT_DIR}" ]]; then
   link_path "${TEMPLATE_AGENTS_FILE}" "${PROJECT_DIR}/AGENTS.md"
   link_path "${TEMPLATE_AGENTS_FILE}" "${PROJECT_DIR}/CLAUDE.md"
-  link_collection "${SKILLS_DIR}" "${PROJECT_DIR}/.claude/skills" directory
-  link_collection "${AGENTS_DIR}" "${PROJECT_DIR}/.claude/agents" file
 
-  if ! command -v python3 >/dev/null 2>&1; then
-    printf 'error: Python 3 is required to build Cursor rules\n' >&2
-    exit 1
+  if [[ "${TARGET_IDE}" == "all" || "${TARGET_IDE}" == "claude" ]]; then
+    link_collection "${SKILLS_DIR}" "${PROJECT_DIR}/.claude/skills" directory
+    link_collection "${AGENTS_DIR}" "${PROJECT_DIR}/.claude/agents" file
   fi
 
-  python3 "${SCRIPT_DIR}/build_cursor_rules.py" \
-    --skills-dir "${SKILLS_DIR}" \
-    --out-dir "${PROJECT_DIR}/.cursor/rules"
+  if [[ "${TARGET_IDE}" == "all" || "${TARGET_IDE}" == "gemini" ]]; then
+    link_collection "${SKILLS_DIR}" "${PROJECT_DIR}/.gemini/skills" directory
+    link_collection "${AGENTS_DIR}" "${PROJECT_DIR}/.gemini/agents" file
+  fi
+
+  if [[ "${TARGET_IDE}" == "all" || "${TARGET_IDE}" == "antigravity" ]]; then
+    link_collection "${SKILLS_DIR}" "${PROJECT_DIR}/.antigravity/skills" directory
+    link_collection "${AGENTS_DIR}" "${PROJECT_DIR}/.antigravity/agents" file
+  fi
+
+  if [[ "${TARGET_IDE}" == "all" || "${TARGET_IDE}" == "codex" ]]; then
+    link_collection "${SKILLS_DIR}" "${PROJECT_DIR}/.codex/skills" directory
+  fi
+
+  if [[ "${TARGET_IDE}" == "all" || "${TARGET_IDE}" == "opencode" ]]; then
+    link_collection "${SKILLS_DIR}" "${PROJECT_DIR}/.opencode/skills" directory
+  fi
+
+  if [[ "${TARGET_IDE}" == "all" || "${TARGET_IDE}" == "cursor" ]]; then
+    if ! command -v python3 >/dev/null 2>&1; then
+      printf 'error: Python 3 is required to build Cursor rules\n' >&2
+      exit 1
+    fi
+    python3 "${SCRIPT_DIR}/build_cursor_rules.py" \
+      --skills-dir "${SKILLS_DIR}" \
+      --out-dir "${PROJECT_DIR}/.cursor/rules"
+  fi
 fi

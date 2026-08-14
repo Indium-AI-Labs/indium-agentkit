@@ -1,7 +1,9 @@
 [CmdletBinding()]
 param(
     [Parameter(Position = 0)]
-    [string]$ProjectDir
+    [string]$ProjectDir,
+    [Parameter(Position = 1)]
+    [string]$TargetIde = "all"
 )
 
 Set-StrictMode -Version Latest
@@ -161,15 +163,38 @@ if (-not [string]::IsNullOrWhiteSpace($ProjectDir)) {
     $ProjectDir = (Resolve-Path -LiteralPath $ProjectDir).Path
     New-AgentKitLink -Target $TemplateAgentsFile -LinkPath (Join-Path $ProjectDir "AGENTS.md")
     New-AgentKitLink -Target $TemplateAgentsFile -LinkPath (Join-Path $ProjectDir "CLAUDE.md")
-    Add-AgentKitCollection -SourceDir $SkillsDir -DestinationDir (Join-Path (Join-Path $ProjectDir ".claude") "skills") -Kind Skill
-    Add-AgentKitCollection -SourceDir $AgentsDir -DestinationDir (Join-Path (Join-Path $ProjectDir ".claude") "agents") -Kind Agent
 
-    $builder = Join-Path $PSScriptRoot "build_cursor_rules.py"
-    $rulesDir = Join-Path (Join-Path $ProjectDir ".cursor") "rules"
-    $python = Get-Command "python" -ErrorAction SilentlyContinue
-    $pyLauncher = Get-Command "py" -ErrorAction SilentlyContinue
-    if ($null -ne $python) { & $python.Source $builder --skills-dir $SkillsDir --out-dir $rulesDir }
-    elseif ($null -ne $pyLauncher) { & $pyLauncher.Source -3 $builder --skills-dir $SkillsDir --out-dir $rulesDir }
-    else { throw "Python 3 is required to build Cursor rules, but python and py were not found." }
-    if ($LASTEXITCODE -ne 0) { throw "Cursor rule generation failed with exit code $LASTEXITCODE." }
+    if ($TargetIde -eq "all" -or $TargetIde -eq "claude") {
+        Add-AgentKitCollection -SourceDir $SkillsDir -DestinationDir (Join-Path (Join-Path $ProjectDir ".claude") "skills") -Kind Skill
+        Add-AgentKitCollection -SourceDir $AgentsDir -DestinationDir (Join-Path (Join-Path $ProjectDir ".claude") "agents") -Kind Agent
+    }
+
+    if ($TargetIde -eq "all" -or $TargetIde -eq "gemini") {
+        Add-AgentKitCollection -SourceDir $SkillsDir -DestinationDir (Join-Path (Join-Path $ProjectDir ".gemini") "skills") -Kind Skill
+        Add-AgentKitCollection -SourceDir $AgentsDir -DestinationDir (Join-Path (Join-Path $ProjectDir ".gemini") "agents") -Kind Agent
+    }
+
+    if ($TargetIde -eq "all" -or $TargetIde -eq "antigravity") {
+        Add-AgentKitCollection -SourceDir $SkillsDir -DestinationDir (Join-Path (Join-Path $ProjectDir ".antigravity") "skills") -Kind Skill
+        Add-AgentKitCollection -SourceDir $AgentsDir -DestinationDir (Join-Path (Join-Path $ProjectDir ".antigravity") "agents") -Kind Agent
+    }
+
+    if ($TargetIde -eq "all" -or $TargetIde -eq "codex") {
+        Add-AgentKitCollection -SourceDir $SkillsDir -DestinationDir (Join-Path (Join-Path $ProjectDir ".codex") "skills") -Kind Skill
+    }
+
+    if ($TargetIde -eq "all" -or $TargetIde -eq "opencode") {
+        Add-AgentKitCollection -SourceDir $SkillsDir -DestinationDir (Join-Path (Join-Path $ProjectDir ".opencode") "skills") -Kind Skill
+    }
+
+    if ($TargetIde -eq "all" -or $TargetIde -eq "cursor") {
+        $builder = Join-Path $PSScriptRoot "build_cursor_rules.py"
+        $rulesDir = Join-Path (Join-Path $ProjectDir ".cursor") "rules"
+        $python = Get-Command "python" -ErrorAction SilentlyContinue
+        $pyLauncher = Get-Command "py" -ErrorAction SilentlyContinue
+        if ($null -ne $python) { & $python.Source $builder --skills-dir $SkillsDir --out-dir $rulesDir }
+        elseif ($null -ne $pyLauncher) { & $pyLauncher.Source -3 $builder --skills-dir $SkillsDir --out-dir $rulesDir }
+        else { throw "Python 3 is required to build Cursor rules, but python and py were not found." }
+        if ($LASTEXITCODE -ne 0) { throw "Cursor rule generation failed with exit code $LASTEXITCODE." }
+    }
 }

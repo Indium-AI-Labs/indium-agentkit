@@ -1,6 +1,6 @@
 # Frontend Ship Skill (`skills/frontend-ship`)
 
-The **`frontend-ship`** skill provides AI coding agents (Claude Code, Cursor, Codex, Antigravity CLI, Claude.ai, ChatGPT) with deterministic, accessible, and high-performance frontend UI engineering protocols.
+The **`frontend-ship`** skill provides AI coding agents (Claude Code, Cursor, Codex, Antigravity CLI, Gemini CLI, OpenCode, Claude.ai, ChatGPT) with deterministic, accessible, and high-performance frontend UI engineering protocols.
 
 ---
 
@@ -9,9 +9,27 @@ The **`frontend-ship`** skill provides AI coding agents (Claude Code, Cursor, Co
 To install this skill into any project repository in under 2 seconds, run:
 
 ```bash
+# Auto-detect active IDE (Antigravity, Cursor, OpenCode, Claude Code)
 npx @indium-ai-labs/agentkit add frontend-ship
 ```
-*Automatically configures Cursor rules (`.cursor/rules/frontend-ship.mdc`), Claude Code (`CLAUDE.md`), and Windsurf / Copilot configurations.*
+
+### 🎯 Target Specific AI Editors & IDEs:
+```bash
+# Antigravity IDE (.antigravity/skills)
+npx @indium-ai-labs/agentkit add frontend-ship --target=antigravity
+
+# OpenCode (.opencode/skills)
+npx @indium-ai-labs/agentkit add frontend-ship --target=opencode
+
+# Cursor IDE (.cursor/rules/frontend-ship.mdc)
+npx @indium-ai-labs/agentkit add frontend-ship --target=cursor
+
+# Claude Code (.claude/skills)
+npx @indium-ai-labs/agentkit add frontend-ship --target=claude
+
+# Gemini CLI (.gemini/skills)
+npx @indium-ai-labs/agentkit add frontend-ship --target=gemini
+```
 
 ---
 
