@@ -1,9 +1,13 @@
-name: Validate content
+name: Validate
 
 on:
   push:
     branches: [main]
   pull_request:
+
+concurrency:
+  group: validate-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -11,8 +15,57 @@ permissions:
 jobs:
   validate:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      installer_changed: ${{ steps.changes.outputs.installer_changed }}
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Detect installer changes
+        id: changes
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          EVENT_PATH: ${{ github.event_path }}
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          import subprocess
+
+          with open(os.environ["EVENT_PATH"], encoding="utf-8") as handle:
+              event = json.load(handle)
+          base = (
+              event["pull_request"]["base"]["sha"]
+              if os.environ["EVENT_NAME"] == "pull_request"
+              else event.get("before", "")
+          )
+          installer_paths = {
+              ".github/workflows/install-smoke.yml",
+              ".github/workflows/validate.yml",
+              "package.json",
+              "scripts/build_cursor_rules.py",
+              "scripts/check_install.py",
+              "scripts/cli.js",
+              "scripts/install.py",
+              "scripts/install.ps1",
+              "scripts/install.sh",
+              "tests/test_build_cursor_rules.py",
+              "tests/test_cli.py",
+              "tests/test_install.py",
+          }
+          changed = True
+          if base and set(base) != {"0"}:
+              result = subprocess.run(
+                  ["git", "diff", "--name-only", base, "HEAD"],
+                  check=True,
+                  capture_output=True,
+                  text=True,
+              )
+              changed = bool(installer_paths.intersection(result.stdout.splitlines()))
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
+              output.write(f"installer_changed={str(changed).lower()}\n")
+          PY
       - name: Validate skills and subagents
         run: python3 scripts/validate_content.py
       - name: Validate handoff templates
@@ -25,3 +78,52 @@ jobs:
         run: python3 scripts/list_content.py --format markdown
       - name: Run tests
         run: python3 -m unittest discover -s tests -v
+  bash:
+    needs: validate
+    if: needs.validate.outputs.installer_changed == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+      - name: Smoke-test Bash installer
+        run: |
+          install_test_root="$(mktemp -d)"
+          install_test_home="$install_test_root/home"
+          install_test_project="$install_test_root/project"
+          mkdir -p "$install_test_home" "$install_test_project"
+          env HOME="$install_test_home" bash scripts/install.sh "$install_test_project" codex
+          python3 scripts/check_install.py \
+            --project "$install_test_project" \
+            --target codex \
+            --mode link
+          test ! -e "$install_test_home/.claude"
+          test ! -e "$install_test_home/.codex"
+
+  powershell:
+    needs: validate
+    if: needs.validate.outputs.installer_changed == 'true'
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+      - name: Smoke-test PowerShell installer
+        shell: powershell
+        run: |
+          $installTestRoot = Join-Path $env:RUNNER_TEMP "indium-agentkit-install-smoke"
+          $installTestHome = Join-Path $installTestRoot "home"
+          $installTestProject = Join-Path $installTestRoot "project"
+          New-Item -ItemType Directory -Force -Path $installTestHome, $installTestProject | Out-Null
+          $originalUserProfile = $env:USERPROFILE
+          try {
+            $env:USERPROFILE = $installTestHome
+            .\scripts\install.ps1 -ProjectDir $installTestProject -TargetIde codex
+            python scripts/check_install.py `
+              --project $installTestProject `
+              --target codex `
+              --mode link
+            if (Test-Path (Join-Path $installTestHome ".claude")) { throw "unexpected user-scope write" }
+            if (Test-Path (Join-Path $installTestHome ".codex")) { throw "unexpected user-scope write" }
+          }
+          finally {
+            $env:USERPROFILE = $originalUserProfile
+          }
