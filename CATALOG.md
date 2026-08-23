@@ -11,6 +11,7 @@ python scripts/list_content.py --format markdown
 | --- | --- | --- |
 | skill | `accessibility-audit` | Audit a user interface for WCAG conformance, keyboard operability, screen reader compatibility, color contrast, and inclusive design, reporting findings with severity and remediation. |
 | skill | `api-design` | Design an API contract — resources, operations, schemas, errors, versioning, and pagination — from requirements before implementation, producing a completed api-contract handoff. |
+| skill | `ast-manipulation-codemods` | Write Abstract Syntax Tree (AST) transformers to automate large-scale, syntax-aware codebase migrations. |
 | skill | `author-agentkit-content` | Create or update indium-agentkit skills, subagents, templates, validation, and documentation. Use when adding, revising, validating, or publishing content in this distribution repository. |
 | skill | `backend-api` | Build robust typed API endpoints with safe contracts. |
 | skill | `ci-pipeline` | Design reliable CI pipelines with useful required checks. |
@@ -23,6 +24,7 @@ python scripts/list_content.py --format markdown
 | skill | `dependency-audit` | Audit project dependencies for vulnerabilities, staleness, license risk, unused packages, and version-policy compliance using manifests, lockfiles, and available scanning tools. |
 | skill | `deployment-safety` | Plan and verify staged deployments with safe rollback. |
 | skill | `estimate-work` | Break down a feature, fix, or change into estimated effort with scope, risk factors, assumptions, and sequencing before prioritization. |
+| skill | `event-sourcing-architecture` | Design immutable event logs, CQRS command/query models, and materialized view projections. |
 | skill | `frontend-ship` | Build accessible, typed, expressive, glassmorphic, and 3D frontend features end to end. |
 | skill | `hardware-in-loop-testing` | Interface hardware-in-the-loop (HIL) simulation testbeds with embedded firmware endpoints under noise and faults. |
 | skill | `incident-triage` | Triage incidents with evidence, mitigation, and follow-up. |
