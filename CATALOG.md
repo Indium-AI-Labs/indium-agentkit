@@ -56,6 +56,7 @@ python scripts/list_content.py --format markdown
 | subagent | `database-architect` | Analyze schemas and propose safe, verified migration plans. |
 | subagent | `dependency-auditor` | Audit dependency vulnerabilities, staleness, and license risk read-only. |
 | subagent | `doc-writer` | Read-only documentation specialist that analyzes code, tests, and history to draft accurate project documentation. |
+| subagent | `ebpf-specialist` | Audit eBPF bytecode, XDP packet processing programs, eBPF maps, and kernel-level tracing probes for safety, side effects, and verifier bounds read-only. |
 | subagent | `estimator` | Read-only estimation specialist that analyzes scope, complexity, dependencies, and risk to produce effort assessments. |
 | subagent | `explorer` | Read-only codebase explorer that maps relevant files, control flow, conventions, and uncertainties for a focused task. |
 | subagent | `frontend-builder` | Implement scoped accessible UI features from agreed contracts. |
