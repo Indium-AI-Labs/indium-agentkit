@@ -60,6 +60,7 @@ python scripts/list_content.py --format markdown
 | subagent | `explorer` | Read-only codebase explorer that maps relevant files, control flow, conventions, and uncertainties for a focused task. |
 | subagent | `frontend-builder` | Implement scoped accessible UI features from agreed contracts. |
 | subagent | `incident-commander` | Coordinate evidence-based incident response without production edits. |
+| subagent | `iot-embedded-auditor` | Audit RTOS task scheduling, firmware update routines, memory layout, and peripheral hardware interfaces read-only. |
 | subagent | `llm-evaluator` | Read-only LLM evaluation specialist that inspects prompt definitions, RAG retrieval logic, benchmark datasets, and guardrails. |
 | subagent | `local-model-specialist` | Evaluate on-device LLM integration, GGUF quantization levels, and KV cache memory constraints read-only. |
 | subagent | `migration-planner` | Read-only migration planner that inventories compatibility impact, rollout stages, rollback paths, and verification for schema, API, configuration, or file-format changes. |
