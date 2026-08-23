@@ -43,6 +43,7 @@ python scripts/list_content.py --format markdown
 | skill | `rtos-firmware-development` | Write deterministic, low-latency task schedulers and peripheral drivers for embedded FreeRTOS/Zephyr devices. |
 | skill | `safe-migration` | Plan and implement safe schema, API, configuration, storage, or file-format migrations with compatibility analysis, staged rollout, rollback, and evidence-based verification. |
 | skill | `security-review` | Review a scoped code change, endpoint, integration, configuration, or infrastructure definition for security risks by tracing assets, trust boundaries, authorization, input handling, and exploit paths. |
+| skill | `synthetic-data-generation` | Implement deterministic scripts to populate databases with referentially solid, PII-free data. |
 | skill | `systematic-debugging` | Investigate a bug, failing test, regression, unexpected output, or production issue through reproduction, evidence, hypotheses, root-cause analysis, and a regression test before fixing it. |
 | skill | `test-first-change` | Plan and implement a behavior change, bug fix, or refactor with focused behavior-level tests, public seams, and incremental red-green-refactor cycles. Use when writing or changing production code. |
 | skill | `threat-modeling` | Perform structured threat modeling (STRIDE/PASTA) on architecture diagrams, system interfaces, and data flow graphs before implementation. |
