@@ -71,4 +71,5 @@ python scripts/list_content.py --format markdown
 | subagent | `reviewer` | Read-only independent reviewer for a completed diff, branch, or pull request who reports actionable findings with evidence. |
 | subagent | `runbook-writer` | Draft evidence-backed operational runbooks from system behavior. |
 | subagent | `security-reviewer` | Review scoped changes for trust-boundary and exploit-path risks. |
+| subagent | `synthetic-data-architect` | Audit relational database topologies, foreign key constraints, and statistical distributions to design referentially intact, PII-free synthetic data schemas read-only. |
 | subagent | `verifier` | Read-only verification specialist that runs declared tests, lint, builds, and focused reproductions and reports exact results. |
