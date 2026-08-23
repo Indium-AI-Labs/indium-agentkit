@@ -59,6 +59,7 @@ python scripts/list_content.py --format markdown
 | subagent | `ebpf-specialist` | Audit eBPF bytecode, XDP packet processing programs, eBPF maps, and kernel-level tracing probes for safety, side effects, and verifier bounds read-only. |
 | subagent | `estimator` | Read-only estimation specialist that analyzes scope, complexity, dependencies, and risk to produce effort assessments. |
 | subagent | `explorer` | Read-only codebase explorer that maps relevant files, control flow, conventions, and uncertainties for a focused task. |
+| subagent | `formal-verifier` | Evaluate formal specifications (TLA+, Alloy, Dafny), state space invariants, temporal logic properties, and mathematical proofs read-only. |
 | subagent | `frontend-builder` | Implement scoped accessible UI features from agreed contracts. |
 | subagent | `incident-commander` | Coordinate evidence-based incident response without production edits. |
 | subagent | `iot-embedded-auditor` | Audit RTOS task scheduling, firmware update routines, memory layout, and peripheral hardware interfaces read-only. |
