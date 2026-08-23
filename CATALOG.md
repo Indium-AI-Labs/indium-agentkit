@@ -29,6 +29,7 @@ python scripts/list_content.py --format markdown
 | skill | `load-testing-suite` | Design, configure, and execute load and stress testing suites (k6, Locust) with target latency SLAs, throughput targets, and tear-down verification. |
 | skill | `local-llm-integration` | Deploy, optimize, and serve quantized open-weight local LLMs (vLLM/Ollama/llama.cpp) with GQA-aware VRAM pre-flight validation, process-scoped cleanup, and healthcheck polling. |
 | skill | `mobile-release-safety` | Plan and audit mobile application releases (iOS/Android/React Native/Flutter) covering app store submission requirements, code signing, feature flags, OTA updates, and crash reporting. |
+| skill | `multi-agent-workflow-design` | Design typed state machines, JSON-RPC handoff protocols, and delegation topologies for multi-agent execution. |
 | skill | `observability-setup` | Instrument code with structured logging, metrics, distributed tracing, or alerting following existing observability patterns and avoiding credential exposure. |
 | skill | `onboard-to-codebase` | Generate a developer onboarding guide or codebase orientation by analyzing architecture, conventions, dependencies, workflows, and common tasks from the existing project. |
 | skill | `performance-optimization` | Measure, analyze, and optimize a specific performance bottleneck through profiling, targeted change, and comparative re-measurement with evidence. |
