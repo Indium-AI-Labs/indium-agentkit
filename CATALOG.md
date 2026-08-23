@@ -24,6 +24,7 @@ python scripts/list_content.py --format markdown
 | skill | `deployment-safety` | Plan and verify staged deployments with safe rollback. |
 | skill | `estimate-work` | Break down a feature, fix, or change into estimated effort with scope, risk factors, assumptions, and sequencing before prioritization. |
 | skill | `frontend-ship` | Build accessible, typed, expressive, glassmorphic, and 3D frontend features end to end. |
+| skill | `hardware-in-loop-testing` | Interface hardware-in-the-loop (HIL) simulation testbeds with embedded firmware endpoints under noise and faults. |
 | skill | `incident-triage` | Triage incidents with evidence, mitigation, and follow-up. |
 | skill | `infrastructure-review` | Review infrastructure for security, reliability, and cost risks. |
 | skill | `llm-eval-harness` | Design and execute evaluation benchmarks for prompts, RAG retrieval pipelines, and agent tools to measure token cost, latency, accuracy, and guardrail compliance. |
