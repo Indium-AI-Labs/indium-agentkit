@@ -38,6 +38,7 @@ python scripts/list_content.py --format markdown
 | skill | `release-notes` | Create accurate user-facing release notes or changelog entries from a commit range, tags, issues, and repository history, including breaking changes, migrations, and known limitations. |
 | skill | `resolve-merge-conflicts` | Resolve Git merge or rebase conflicts by recovering each side's intent, preserving compatible behavior, validating the result, and documenting unavoidable trade-offs. |
 | skill | `review-change` | Review a local diff, branch, commit range, or pull request for correctness, regressions, security concerns, project conventions, and missing tests. Use when asked for a code review; report findings without editing by default. |
+| skill | `rtos-firmware-development` | Write deterministic, low-latency task schedulers and peripheral drivers for embedded FreeRTOS/Zephyr devices. |
 | skill | `safe-migration` | Plan and implement safe schema, API, configuration, storage, or file-format migrations with compatibility analysis, staged rollout, rollback, and evidence-based verification. |
 | skill | `security-review` | Review a scoped code change, endpoint, integration, configuration, or infrastructure definition for security risks by tracing assets, trust boundaries, authorization, input handling, and exploit paths. |
 | skill | `systematic-debugging` | Investigate a bug, failing test, regression, unexpected output, or production issue through reproduction, evidence, hypotheses, root-cause analysis, and a regression test before fixing it. |
