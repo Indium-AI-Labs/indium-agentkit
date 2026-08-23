@@ -61,6 +61,7 @@ python scripts/list_content.py --format markdown
 | subagent | `frontend-builder` | Implement scoped accessible UI features from agreed contracts. |
 | subagent | `incident-commander` | Coordinate evidence-based incident response without production edits. |
 | subagent | `llm-evaluator` | Read-only LLM evaluation specialist that inspects prompt definitions, RAG retrieval logic, benchmark datasets, and guardrails. |
+| subagent | `local-model-specialist` | Evaluate on-device LLM integration, GGUF quantization levels, and KV cache memory constraints read-only. |
 | subagent | `migration-planner` | Read-only migration planner that inventories compatibility impact, rollout stages, rollback paths, and verification for schema, API, configuration, or file-format changes. |
 | subagent | `mobile-specialist` | Read-only mobile specialist that inspects build configurations, permission manifests, native bridges, bundle sizes, and store submission readiness. |
 | subagent | `performance-profiler` | Measure performance bottlenecks against a reproducible baseline. |
