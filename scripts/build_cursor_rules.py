@@ -73,13 +73,17 @@ def convert_skill(skill_file: Path, out_dir: Path) -> Path:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Convert skills/*/SKILL.md files to Cursor .mdc rules."
+        description="Convert skills/*/SKILL.md files to Cursor .mdc rules.",
+        allow_abbrev=False,
     )
     parser.add_argument(
         "--skills-dir", type=Path, required=True, help="Directory containing skills"
     )
     parser.add_argument(
         "--out-dir", type=Path, required=True, help="Directory for generated .mdc files"
+    )
+    parser.add_argument(
+        "--skill", help="Convert only the skill whose directory has this name"
     )
     return parser.parse_args()
 
@@ -94,6 +98,15 @@ def main() -> int:
         return 2
 
     skill_files = sorted(skills_dir.glob("*/SKILL.md"))
+    if args.skill:
+        skill_files = [
+            skill_file
+            for skill_file in skill_files
+            if skill_file.parent.name == args.skill
+        ]
+        if not skill_files:
+            print(f"error: skill not found: {args.skill}", file=sys.stderr)
+            return 2
     if not skill_files:
         print("no skills found")
         return 0

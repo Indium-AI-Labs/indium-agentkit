@@ -4,6 +4,17 @@ All notable changes to this project are documented here.
 
 ## Unreleased
 
+### Changed
+
+- Refactored installation around explicit project/user scope, destination,
+  target, and item selection so `add <name>` installs only the requested
+  artifact and project installs never leak into user-level agent directories.
+- Made npm installs durable copies by default, aligned project-context files
+  with the selected agent architecture, and made target auto-detection fail
+  closed when no agent directory exists.
+- Consolidated validation and installer smoke tests into one cancellable CI
+  workflow; the Windows smoke job now runs only for installer-related changes.
+
 ### Added
 
 - Codex delegation guidance and a dependency-free delegation packet adapter.

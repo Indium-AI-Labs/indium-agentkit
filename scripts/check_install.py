@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check whether indium-agentkit content is linked into expected locations."""
+"""Check one explicit indium-agentkit installation boundary."""
 
 from __future__ import annotations
 
@@ -7,62 +7,162 @@ import argparse
 import json
 from pathlib import Path
 
+from install import (
+    AGENT_DESTINATIONS,
+    SKILL_DESTINATIONS,
+    expand_targets,
+    paths_match,
+    select_content,
+)
 
-def link_matches(path: Path, target: Path) -> bool:
-    try:
-        return path.is_symlink() and path.resolve() == target.resolve()
-    except OSError:
-        return False
+
+def artifact_matches(source: Path, destination: Path, mode: str) -> bool:
+    if mode in {"auto", "link"}:
+        try:
+            if destination.is_symlink() and destination.resolve() == source.resolve():
+                return True
+        except OSError:
+            pass
+    return mode in {"auto", "copy"} and paths_match(source, destination)
 
 
-def check_collection(source: Path, destination: Path, items: list[Path]) -> list[dict[str, str]]:
-    results: list[dict[str, str]] = []
-    if link_matches(destination, source):
-        return [{"status": "warning", "path": str(destination), "message": "legacy directory link; re-run installer to migrate"}]
+def check_artifact(
+    source: Path, destination: Path, mode: str
+) -> dict[str, str]:
+    if artifact_matches(source, destination, mode):
+        installed_as = "linked" if destination.is_symlink() else "copied"
+        return {"status": "ok", "path": str(destination), "message": installed_as}
+    if destination.exists() or destination.is_symlink():
+        message = f"does not match agentkit source using {mode} mode"
+    else:
+        message = "missing"
+    return {"status": "error", "path": str(destination), "message": message}
+
+
+def check_collection(
+    sources: list[Path], destination: Path, mode: str
+) -> list[dict[str, str]]:
     if not destination.is_dir():
-        return [{"status": "error", "path": str(destination), "message": "collection directory is missing"}]
-    for item in items:
-        installed = destination / item.name
-        if link_matches(installed, item):
-            results.append({"status": "ok", "path": str(installed), "message": "linked"})
-        elif installed.exists() or installed.is_symlink():
-            results.append({"status": "error", "path": str(installed), "message": "not linked to agentkit source"})
-        else:
-            results.append({"status": "error", "path": str(installed), "message": "missing"})
-    return results
+        return [
+            {
+                "status": "error",
+                "path": str(destination),
+                "message": "collection directory is missing",
+            }
+        ]
+    return [
+        check_artifact(source, destination / source.name, mode) for source in sources
+    ]
 
 
-def check_project(repo_root: Path, project: Path, skills: list[Path], agents: list[Path]) -> list[dict[str, str]]:
-    template = repo_root / "templates" / "AGENTS.md"
+def check_scope(
+    repo_root: Path,
+    install_root: Path,
+    targets: list[str],
+    skills: list[Path],
+    agents: list[Path],
+    mode: str,
+    include_context: bool,
+) -> list[dict[str, str]]:
     results: list[dict[str, str]] = []
-    for filename in ("AGENTS.md", "CLAUDE.md"):
-        path = project / filename
-        status = "ok" if link_matches(path, template) else "error"
-        message = "linked" if status == "ok" else "not linked to templates/AGENTS.md"
-        results.append({"status": status, "path": str(path), "message": message})
-    results.extend(check_collection(repo_root / "skills", project / ".claude" / "skills", skills))
-    results.extend(check_collection(repo_root / "agents", project / ".claude" / "agents", agents))
+    for target in targets:
+        skill_destination = SKILL_DESTINATIONS.get(target)
+        if skill_destination and skills:
+            results.extend(
+                check_collection(skills, install_root / skill_destination, mode)
+            )
+
+        agent_destination = AGENT_DESTINATIONS.get(target)
+        if agent_destination and agents:
+            results.extend(
+                check_collection(agents, install_root / agent_destination, mode)
+            )
+
+        if target == "cursor" and skills:
+            rules_dir = install_root / ".cursor" / "rules"
+            if not rules_dir.is_dir():
+                results.append(
+                    {
+                        "status": "error",
+                        "path": str(rules_dir),
+                        "message": "collection directory is missing",
+                    }
+                )
+            else:
+                for skill in skills:
+                    rule = rules_dir / f"{skill.name}.mdc"
+                    results.append(
+                        {
+                            "status": "ok" if rule.is_file() else "error",
+                            "path": str(rule),
+                            "message": "generated" if rule.is_file() else "missing",
+                        }
+                    )
+
+    if include_context:
+        template = repo_root / "templates" / "AGENTS.md"
+        if "claude" in targets:
+            results.append(check_artifact(template, install_root / "CLAUDE.md", mode))
+        if any(target != "claude" for target in targets):
+            results.append(check_artifact(template, install_root / "AGENTS.md", mode))
     return results
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Check an indium-agentkit installation.")
-    parser.add_argument("--repo-root", type=Path, default=Path(__file__).resolve().parent.parent)
-    parser.add_argument("--home", type=Path, default=Path.home(), help="Home directory to inspect")
-    parser.add_argument("--project", type=Path, help="Optional installed project directory")
-    parser.add_argument("--json", action="store_true", help="Emit JSON instead of text")
+    parser.add_argument(
+        "--repo-root", type=Path, default=Path(__file__).resolve().parent.parent
+    )
+    parser.add_argument("--home", type=Path, default=Path.home())
+    parser.add_argument("--project", type=Path)
+    parser.add_argument("--scope", choices=("user", "project", "both"))
+    parser.add_argument("--target", action="append", default=[])
+    parser.add_argument("--item", default="all")
+    parser.add_argument("--mode", choices=("auto", "link", "copy"), default="auto")
+    parser.add_argument(
+        "--include-context",
+        action="store_true",
+        help="Require the target-specific project context file",
+    )
+    parser.add_argument("--json", action="store_true")
     args = parser.parse_args()
 
+    scope = args.scope or ("project" if args.project else "user")
+    if scope in {"project", "both"} and not args.project:
+        parser.error("--project is required for project or both scope")
+
     repo_root = args.repo_root.resolve()
-    skills = sorted(path for path in (repo_root / "skills").iterdir() if path.is_dir())
-    agents = sorted((repo_root / "agents").glob("*.md"))
-    home = args.home.expanduser().resolve()
+    try:
+        targets = expand_targets(args.target or ["all"])
+        skills, agents = select_content(repo_root, args.item)
+    except ValueError as error:
+        parser.error(str(error))
+
     results: list[dict[str, str]] = []
-    for tool in (".claude", ".codex", ".gemini", ".antigravity"):
-        results.extend(check_collection(repo_root / "skills", home / tool / "skills", skills))
-    results.extend(check_collection(repo_root / "agents", home / ".claude" / "agents", agents))
-    if args.project:
-        results.extend(check_project(repo_root, args.project.resolve(), skills, agents))
+    if scope in {"user", "both"}:
+        results.extend(
+            check_scope(
+                repo_root,
+                args.home.expanduser().resolve(),
+                targets,
+                skills,
+                agents,
+                args.mode,
+                False,
+            )
+        )
+    if scope in {"project", "both"}:
+        results.extend(
+            check_scope(
+                repo_root,
+                args.project.expanduser().resolve(),
+                targets,
+                skills,
+                agents,
+                args.mode,
+                args.include_context or args.item == "all",
+            )
+        )
 
     if args.json:
         print(json.dumps(results, indent=2))

@@ -34,6 +34,12 @@ python scripts/build_cursor_rules.py --skills-dir skills --out-dir .cursor/rules
 python scripts/list_content.py --format markdown
 ```
 
+Installer changes must also preserve the scope contract: project installs may
+write only below the selected project, user installs may write only below the
+selected home, and `add <name>` may install only that artifact. Add regression
+coverage in `tests/test_install.py` and `tests/test_cli.py` for changes to these
+boundaries.
+
 Commit frequent, scoped, coherent units of completed work. Use concise,
 professional imperative subjects that say what changed, such as `Add handoff
 template validation`; avoid vague or phase-based subjects. Push each completed

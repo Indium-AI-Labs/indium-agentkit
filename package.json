@@ -1,6 +1,6 @@
 {
   "name": "@indium-ai-labs/agentkit",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "Portable AI coding-agent skills, subagents, and project-context templates.",
   "main": "scripts/cli.js",
   "bin": {
@@ -19,8 +19,8 @@
     "README.md"
   ],
   "scripts": {
-    "test": "python3 -m unittest discover -s tests -v",
-    "lint": "python3 scripts/validate_content.py"
+    "test": "python -m unittest discover -s tests -v",
+    "lint": "python scripts/validate_content.py"
   },
   "keywords": [
     "ai",

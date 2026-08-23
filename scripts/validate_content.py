@@ -124,7 +124,8 @@ def validate_repository(root: Path) -> list[tuple[Path, str]]:
     failures: list[tuple[Path, str]] = []
     required = [
         "AGENTS.md", "templates/AGENTS.md", "skills", "agents",
-        "scripts/build_cursor_rules.py", "scripts/check_install.py",
+        "scripts/build_cursor_rules.py", "scripts/install.py",
+        "scripts/install.sh", "scripts/install.ps1", "scripts/check_install.py",
         "scripts/scaffold_content.py", "scripts/list_content.py",
         "scripts/codex_delegate.py", "codex/README.md",
         "scripts/validate_handoff.py",
