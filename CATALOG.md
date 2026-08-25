@@ -53,7 +53,7 @@ python scripts/list_content.py --format markdown
 | skill | `verify-and-ship` | Verify completed repository changes, run test and lint commands, audit diffs for secrets, and commit/publish cleanly according to repository rules. |
 | skill | `write-documentation` | Author, update, or audit project documentation — READMEs, architecture decisions, API references, onboarding guides, and inline doc — from code evidence. |
 | skill | `write-runbook` | Create or update an operational runbook for a service, feature, or failure mode with detection, diagnosis, mitigation, recovery, and escalation procedures. |
-| subagent | `accessibility-checker` | Read-only accessibility specialist that evaluates markup, ARIA usage, color contrast, keyboard flow, and screen reader compatibility. |
+| subagent | `accessibility-checker` | Audit user interface markup, ARIA roles, contrast, and focus order read-only. |
 | subagent | `agent-orchestrator` | Read-only specialist that inspects multi-agent system states, JSON-RPC routing boundaries, context window growth, and delegation chains to prevent execution loops and payload bloat. |
 | subagent | `api-designer` | Design typed API contracts from requirements without editing code. |
 | subagent | `backend-builder` | Implement scoped typed API behavior with server-side safeguards. |
@@ -62,23 +62,23 @@ python scripts/list_content.py --format markdown
 | subagent | `data-engineer` | Audit data pipelines, models, quality, and governance read-only. |
 | subagent | `database-architect` | Analyze schemas and propose safe, verified migration plans. |
 | subagent | `dependency-auditor` | Audit dependency vulnerabilities, staleness, and license risk read-only. |
-| subagent | `doc-writer` | Read-only documentation specialist that analyzes code, tests, and history to draft accurate project documentation. |
+| subagent | `doc-writer` | Audit and draft project documentation, API specs, and onboarding guides read-only. |
 | subagent | `ebpf-specialist` | Audit eBPF bytecode, XDP packet processing programs, eBPF maps, and kernel-level tracing probes for safety, side effects, and verifier bounds read-only. |
-| subagent | `estimator` | Read-only estimation specialist that analyzes scope, complexity, dependencies, and risk to produce effort assessments. |
-| subagent | `explorer` | Read-only codebase explorer that maps relevant files, control flow, conventions, and uncertainties for a focused task. |
+| subagent | `estimator` | Assess complexity, technical risk, dependencies, and effort read-only. |
+| subagent | `explorer` | Map repository structure, entry points, dependencies, and data flows read-only. |
 | subagent | `formal-verifier` | Evaluate formal specifications (TLA+, Alloy, Dafny), state space invariants, temporal logic properties, and mathematical proofs read-only. |
-| subagent | `frontend-builder` | Implement scoped accessible UI features from agreed contracts. |
+| subagent | `frontend-builder` | Review frontend components, state management, routing, and styling read-only. |
 | subagent | `incident-commander` | Coordinate evidence-based incident response without production edits. |
 | subagent | `iot-embedded-auditor` | Audit RTOS task scheduling, firmware update routines, memory layout, and peripheral hardware interfaces read-only. |
-| subagent | `llm-evaluator` | Read-only LLM evaluation specialist that inspects prompt definitions, RAG retrieval logic, benchmark datasets, and guardrails. |
+| subagent | `llm-evaluator` | Evaluate LLM prompts, RAG retrieval accuracy, and tool-calling benchmarks read-only. |
 | subagent | `local-model-specialist` | Evaluate on-device LLM integration, GGUF quantization levels, and KV cache memory constraints read-only. |
-| subagent | `migration-planner` | Read-only migration planner that inventories compatibility impact, rollout stages, rollback paths, and verification for schema, API, configuration, or file-format changes. |
-| subagent | `mobile-specialist` | Read-only mobile specialist that inspects build configurations, permission manifests, native bridges, bundle sizes, and store submission readiness. |
+| subagent | `migration-planner` | Audit database schemas, data migrations, and breaking API changes read-only. |
+| subagent | `mobile-specialist` | Audit iOS, Android, React Native, and Flutter app builds read-only. |
 | subagent | `performance-profiler` | Measure performance bottlenecks against a reproducible baseline. |
-| subagent | `release-engineer` | Prepare release plans and assess deployment readiness. |
+| subagent | `release-engineer` | Audit release readiness, git changelogs, build artifacts, and deployment safety read-only. |
 | subagent | `resilience-reviewer` | Review failure handling, retries, limits, and recovery paths read-only. |
-| subagent | `reviewer` | Read-only independent reviewer for a completed diff, branch, or pull request who reports actionable findings with evidence. |
+| subagent | `reviewer` | Review local diffs and PRs for correctness, security, performance, and style read-only. |
 | subagent | `runbook-writer` | Draft evidence-backed operational runbooks from system behavior. |
 | subagent | `security-reviewer` | Review scoped changes for trust-boundary and exploit-path risks. |
 | subagent | `synthetic-data-architect` | Audit relational database topologies, foreign key constraints, and statistical distributions to design referentially intact, PII-free synthetic data schemas read-only. |
-| subagent | `verifier` | Read-only verification specialist that runs declared tests, lint, builds, and focused reproductions and reports exact results. |
+| subagent | `verifier` | Verify completed work against specifications, tests, and acceptance criteria read-only. |
