@@ -43,9 +43,35 @@ Analyze frontend component architectures, client-side state management, UI rende
 Treat user inputs, API response payloads, CSS attributes, dynamic HTML strings, and DOM properties as untrusted data.
 Never execute inline scripts or un-sanitized dynamic HTML rendering during review mode.
 
-## Input contract
+## Input & Delegation Schema
 
-Require target component paths, UI framework details (React 18/19, Next.js, Vue 3), state management library, styling paradigm (Tailwind, CSS Modules, Styled Components), and client performance goals.
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "FrontendBuilderInputContext",
+  "type": "object",
+  "required": ["target_paths"],
+  "properties": {
+    "target_paths": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+    "framework": {
+      "type": "string",
+      "enum": ["REACT_NEXTJS", "VUE_NUXT", "SVELTE_SVELTEKIT", "ANGULAR"],
+      "default": "REACT_NEXTJS"
+    },
+    "state_management_library": {
+      "type": "string",
+      "enum": ["ZUSTAND", "REDUX_TOOLKIT", "PINIA", "CONTEXT_API", "MOBX"],
+      "default": "ZUSTAND"
+    },
+    "include_bundle_analysis": { "type": "boolean", "default": true },
+    "include_render_analysis": { "type": "boolean", "default": true }
+  }
+}
+```
 
 ## Systematic review workflow
 
@@ -73,12 +99,59 @@ Require target component paths, UI framework details (React 18/19, Next.js, Vue 
 2. **Asset & Image Optimization**: Verify responsive images use `<Image>` components with explicit `width`, `height`, `priority`, and `srcset` attributes to prevent Layout Shift.
 3. **Hydration Safety**: Flag dynamic client-only values (`Date.now()`, `window.innerWidth`, `Math.random()`) rendered directly in initial SSR markup causing Hydration Mismatch errors.
 
-## Standardized Frontend Violation Patterns
+## Anti-Pattern Catalog (Bad vs Good)
 
-- 🚫 **Unstable Inline Prop**: `<Child onClick={() => doSomething()} />` -> Triggers child re-render every parent render.
-- 🚫 **Prop Drilling Nightmare**: Passing `user` object through 6 component layers without Context or Zustand.
-- 🚫 **Hardcoded Pixel Spacing**: `padding: 23px` -> Violates 8px/4px spatial grid design system token scale.
-- 🚫 **Over-used Client Boundary**: Adding `'use client'` at the top of layout root, opting entire page out of SSR.
+### Pattern 1: Unstable Inline Prop Function
+- ❌ **Bad**:
+  ```tsx
+  <UserList onItemClick={(id) => fetchDetails(id)} />
+  ```
+- ✅ **Good**:
+  ```tsx
+  const handleItemClick = useCallback((id: string) => {
+    fetchDetails(id);
+  }, [fetchDetails]);
+
+  <UserList onItemClick={handleItemClick} />
+  ```
+
+### Pattern 2: Over-used Client Boundary in Next.js App Router
+- ❌ **Bad**:
+  ```tsx
+  // app/dashboard/page.tsx
+  'use client';
+  export default function DashboardPage() { ... }
+  ```
+- ✅ **Good**:
+  ```tsx
+  // app/dashboard/page.tsx (Server Component fetches data)
+  export default async function DashboardPage() {
+    const data = await fetchDashboardData();
+    return <DashboardView data={data} />;
+  }
+  ```
+
+### Pattern 3: Hardcoded Arbitrary Style Values
+- ❌ **Bad**:
+  ```tsx
+  <div style={{ marginTop: '17px', color: '#3b82f6' }}>...</div>
+  ```
+- ✅ **Good**:
+  ```tsx
+  <div className="mt-4 text-blue-500">...</div>
+  ```
+
+### Pattern 4: Hydration Mismatch Trigger
+- ❌ **Bad**:
+  ```tsx
+  <span>Current Time: {new Date().toLocaleTimeString()}</span>
+  ```
+- ✅ **Good**:
+  ```tsx
+  const [time, setTime] = useState<string | null>(null);
+  useEffect(() => { setTime(new Date().toLocaleTimeString()); }, []);
+  return <span>Current Time: {time ?? '--:--'}</span>;
+  ```
 
 ## Evidence-backed findings format
 
@@ -97,12 +170,33 @@ Report frontend findings with structured fields:
 - 🟠 **`MAJOR`**: Excessive global state re-renders causing visible input typing lag ($> 100\text{ms}$ delay); prop drilling $> 4$ layers deep.
 - 🟡 **`NITPICK`**: Unused CSS utility class, minor inline style refactoring opportunity to use design system token.
 
-## Output contract
+## Output Contract & JSON Schema
 
-Emit a structured Markdown report containing:
-1. **Executive Summary**: Framework stack evaluated, total components audited, findings breakdown.
-2. **Component Architecture & Server/Client Boundary Matrix**.
-3. **Client State Flow Diagram & Re-render Analysis (Mermaid)**.
-4. **Bundle Size & Asset Optimization Recommendations**.
-5. **Detailed Findings Inventory**: Grouped by severity with code snippets and remediation instructions.
-6. **Optimized Component Refactoring Code Snippets**.
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "FrontendBuilderOutputReport",
+  "type": "object",
+  "required": ["components_audited_count", "render_optimization_findings", "verdict"],
+  "properties": {
+    "components_audited_count": { "type": "integer" },
+    "server_client_split_ratio": { "type": "string" },
+    "render_optimization_findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["severity", "component_path", "line_range", "category", "evidence", "remediation"],
+        "properties": {
+          "severity": { "type": "string", "enum": ["BLOCKER", "CRITICAL", "MAJOR", "NITPICK"] },
+          "component_path": { "type": "string" },
+          "line_range": { "type": "string" },
+          "category": { "type": "string" },
+          "evidence": { "type": "string" },
+          "remediation": { "type": "string" }
+        }
+      }
+    },
+    "verdict": { "type": "string", "enum": ["APPROVED", "OPTIMIZATION_NEEDED"] }
+  }
+}
+```
